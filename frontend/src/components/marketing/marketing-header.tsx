@@ -9,16 +9,16 @@ export function MarketingHeader() {
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="text-lg font-semibold hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm">
-          Micro SaaS Agent
+          FormSnap
         </Link>
 
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <Link href="/login" className="hidden sm:inline-flex">
-            <Button variant="ghost" className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Sign In</Button>
+          <Link href="/sign-in" className="hidden sm:inline-flex">
+            <Button variant="ghost" className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Sign in</Button>
           </Link>
-          <Link href="/signup">
-            <Button className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Get Started</Button>
+          <Link href="/sign-up">
+            <Button className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Get started</Button>
           </Link>
         </div>
       </div>

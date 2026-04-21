@@ -24,10 +24,10 @@ describe('AuthGuard', () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('redirects to /login when no user', () => {
+  it('redirects to /sign-in when no user (Batch-1 rename)', () => {
     mockUseAuth.mockReturnValue({ user: null, loading: false });
     render(<AuthGuard><div>Protected Content</div></AuthGuard>);
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
-    expect(mockPush).toHaveBeenCalledWith('/login');
+    expect(mockPush).toHaveBeenCalledWith('/sign-in');
   });
 });

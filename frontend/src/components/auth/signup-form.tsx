@@ -57,7 +57,7 @@ export function SignupForm() {
     try {
       setError(null);
       await signUp(data.email, data.password);
-      router.push('/dashboard');
+      router.push('/verify-email');
     } catch (err) {
       if (err instanceof TypeError && err.message.includes('fetch')) {
         setError('Network error. Please check your connection.');
@@ -188,7 +188,7 @@ export function SignupForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
-        <Link href="/login" className="font-medium text-primary hover:underline">
+        <Link href="/sign-in" className="font-medium text-primary hover:underline">
           Sign in
         </Link>
       </p>
