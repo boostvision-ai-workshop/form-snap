@@ -1,0 +1,41 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/frontend/src:delegated
+      - /app/frontend/node_modules
+      - /app/frontend/.next
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app:delegated
+      - /app/.venv
+    env_file:
+      - backend/.env
+    environment:
+      - BACKEND_CORS_ORIGINS=["http://localhost:3000"]
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

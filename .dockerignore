@@ -1,0 +1,26 @@
+node_modules
+.next
+.git
+.env*
+.DS_Store
+.sisyphus
+.agent
+.mcp
+doc
+scripts
+/src
+*.md
+!frontend/README.md
+!README.md
+
+# Frontend test artifacts
+frontend/e2e
+frontend/playwright-report
+frontend/test-results
+
+# Backend (not needed for frontend build)
+backend/.venv
+backend/__pycache__
+backend/.pytest_cache
+backend/.ruff_cache
+backend/tests
