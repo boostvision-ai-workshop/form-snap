@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Batch-2 frontend tests.
  * Covers: AT-002 (create form dialog), AT-004 (form list), AT-005 (delete dialog),

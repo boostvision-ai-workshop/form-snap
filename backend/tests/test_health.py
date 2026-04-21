@@ -28,5 +28,6 @@ async def test_cors_headers(client):
             "Access-Control-Request-Method": "GET",
         },
     )
-    assert response.status_code == 200
+    # PathAwareCORSMiddleware returns 204 No Content for OPTIONS preflight
+    assert response.status_code in (200, 204)
     assert "access-control-allow-origin" in response.headers

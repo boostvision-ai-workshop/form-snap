@@ -27,5 +27,12 @@ class Settings(BaseSettings):
     # Public submission base URL (used to build submit_url and html_snippet)
     PUBLIC_SUBMIT_BASE_URL: str = "http://localhost:8000"
 
+    # Email (Batch-3)
+    EMAIL_PROVIDER: str = "resend"  # "resend" | "noop"
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = ""
+    DASHBOARD_BASE_URL: str = "http://localhost:3000"
+    MAX_BODY_BYTES: int = 102400  # 100 KB
+
 
 settings = Settings()
