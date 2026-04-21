@@ -1,31 +1,44 @@
 'use client';
 
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { EmailVerificationGate } from '@/components/dashboard/email-verification-gate';
+import { FormList } from '@/components/dashboard/form-list';
+import { CreateFormDialog } from '@/components/dashboard/create-form-dialog';
 import { useProfile } from '@/contexts/profile-context';
+import { listForms } from '@/lib/api/forms';
+import type { FormListItem } from '@/lib/api/forms';
 
 export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
-  const { profile, loading, error } = useProfile();
+  const { profile } = useProfile();
+  const [forms, setForms] = useState<FormListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-48" />
-        <Skeleton className="h-5 w-64" />
-      </div>
-    );
-  }
+  const isVerified = profile?.email_verified ?? false;
 
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
+  useEffect(() => {
+    if (!profile) return;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await listForms();
+        setForms(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load forms');
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [profile]);
+
+  function handleFormCreated(form: FormListItem) {
+    setForms((prev) => [form, ...prev]);
   }
 
   return (
@@ -40,6 +53,7 @@ export default function DashboardPage() {
               title={
                 verified ? 'Create a new form' : 'Verify your email to create forms'
               }
+              onClick={() => verified && setCreateOpen(true)}
             >
               New form
             </Button>
@@ -47,17 +61,20 @@ export default function DashboardPage() {
         </EmailVerificationGate>
       </div>
 
-      {/* EmailVerificationGate banner renders inline above for the full-page banner. */}
-      {/* The FormList (Batch-2) will replace the placeholder below. */}
-      <EmailVerificationGate>
-        {() => (
-          <div className="text-muted-foreground text-sm">
-            {profile
-              ? `Signed in as ${profile.email}`
-              : 'Your forms will appear here.'}
-          </div>
-        )}
-      </EmailVerificationGate>
+      <FormList
+        forms={forms}
+        loading={loading}
+        error={error}
+        isVerified={isVerified}
+        onCreateClick={() => setCreateOpen(true)}
+        onFormsChange={setForms}
+      />
+
+      <CreateFormDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={handleFormCreated}
+      />
     </div>
   );
 }

@@ -24,5 +24,8 @@ class Settings(BaseSettings):
     FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
     FIREBASE_CREDENTIALS_PATH: str = ""
 
+    # Public submission base URL (used to build submit_url and html_snippet)
+    PUBLIC_SUBMIT_BASE_URL: str = "http://localhost:8000"
+
 
 settings = Settings()

@@ -44,8 +44,10 @@ class User(Base):
         nullable=False,
     )
 
-    # Relationship to forms (set up in Batch-2 when Form model is added)
-    # forms: Mapped[list["Form"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+    forms: Mapped[list["Form"]] = relationship(  # type: ignore[name-defined]
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email})>"
