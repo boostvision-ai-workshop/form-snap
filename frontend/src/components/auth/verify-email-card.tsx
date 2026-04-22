@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { authProvider } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -73,24 +76,34 @@ export function VerifyEmailCard() {
   }
 
   return (
-    <Card className="w-full max-w-md" data-testid="verify-email-card">
-      <CardHeader>
-        <CardTitle>Check your inbox</CardTitle>
-        <CardDescription>
-          We&apos;ve sent a verification link to{' '}
-          <span className="font-medium text-foreground">{user?.email ?? 'your email'}</span>.
+    <Card className="w-full max-w-md shadow-[var(--shadow-dialog)] border border-border" data-testid="verify-email-card">
+      <CardHeader className="p-6 pb-0 space-y-0 text-center">
+        <div className="flex justify-center mb-5">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/form-snap.svg" alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
+            <span className="text-base font-semibold text-foreground">FormSnap</span>
+          </Link>
+        </div>
+        <div className="flex justify-center mb-3">
+          <div className="rounded-full bg-secondary p-3">
+            <Mail className="h-6 w-6 text-primary" />
+          </div>
+        </div>
+        <CardTitle className="text-xl font-semibold">Check your inbox</CardTitle>
+        <CardDescription className="text-sm text-muted-foreground pt-1">
+          We sent a link to{' '}
+          <span className="font-medium text-foreground">{user?.email ?? 'your email'}</span>
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Click the link in that email to verify your address. Once verified, you&apos;ll be
-          able to create forms. If you don&apos;t see it, check your spam folder.
+      <CardContent className="p-6 space-y-5">
+        <p className="text-sm text-muted-foreground leading-relaxed text-center">
+          Click the link in your email to verify your account. If you don&apos;t see it, check your spam folder.
         </p>
 
         <div className="flex flex-col gap-3">
           {!isMock && (
             <Button
-              className="w-full"
+              className="w-full h-11 bg-primary text-primary-foreground hover:bg-[var(--color-brand-blue-hover)]"
               onClick={handleResend}
               disabled={isResendDisabled}
             >
@@ -99,7 +112,7 @@ export function VerifyEmailCard() {
           )}
 
           <Button
-            className="w-full"
+            className="w-full h-11"
             variant="outline"
             onClick={handleCheckVerified}
             disabled={checking}
@@ -109,7 +122,7 @@ export function VerifyEmailCard() {
 
           {isMock && (
             <Button
-              className="w-full"
+              className="w-full h-11"
               variant="secondary"
               onClick={handleMarkVerified}
               disabled={marking}

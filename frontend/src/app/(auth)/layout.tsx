@@ -3,8 +3,6 @@
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
-import { Card, CardContent } from '@/components/ui/card';
-import { MarketingHeader } from '@/components/marketing/marketing-header';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -23,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
@@ -40,18 +38,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <MarketingHeader />
-      <div className="flex flex-1 items-center justify-center p-4">
-        {isVerifyEmailPage ? (
-          // Verify-email renders its own Card; no wrapping needed
-          children
-        ) : (
-          <Card className="w-full max-w-md">
-            <CardContent className="pt-6">{children}</CardContent>
-          </Card>
-        )}
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
+      {children}
     </div>
   );
 }

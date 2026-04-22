@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -117,67 +119,92 @@ export function LoginForm() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">Sign in to your account to continue</p>
-      </div>
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="name@example.com"
-            autoComplete="email"
-            {...register('email')}
-            aria-invalid={!!errors.email}
-          />
-          {errors.email && (
-            <p className="text-sm text-destructive">{errors.email.message}</p>
-          )}
+    <Card className="w-full max-w-md shadow-[var(--shadow-dialog)] border border-border">
+      <CardHeader className="p-6 pb-0 space-y-0">
+        <div className="flex justify-center mb-5">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/form-snap.svg" alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
+            <span className="text-base font-semibold text-foreground">FormSnap</span>
+          </Link>
         </div>
+        <CardTitle className="text-xl font-semibold text-center">Welcome back</CardTitle>
+        <CardDescription className="text-center text-sm text-muted-foreground pt-1">
+          Sign in to your account to continue
+        </CardDescription>
+      </CardHeader>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            {...register('password')}
-            aria-invalid={!!errors.password}
-          />
-          {errors.password && (
-            <p className="text-sm text-destructive">{errors.password.message}</p>
-          )}
-        </div>
+      <CardContent className="p-6 space-y-5">
+        {/* OAuth buttons first */}
+        <SocialButtons
+          onGoogleClick={handleGoogleSignIn}
+          onGitHubClick={handleGitHubSignIn}
+          loading={isSubmitting || socialLoading}
+        />
 
-        <Button type="submit" className="w-full" disabled={isSubmitting || socialLoading}>
-          {isSubmitting ? 'Signing in...' : 'Sign in'}
-        </Button>
-      </form>
+        {/* Error alert */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-      <SocialButtons
-        onGoogleClick={handleGoogleSignIn}
-        onGitHubClick={handleGitHubSignIn}
-        loading={isSubmitting || socialLoading}
-      />
+        {/* Email + password form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              autoComplete="email"
+              {...register('email')}
+              aria-invalid={!!errors.email}
+            />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
+          </div>
 
-      <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{' '}
-        <Link href="/sign-up" className="font-medium text-primary hover:underline">
-          Sign up
-        </Link>
-      </p>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+              <Link
+                href="/forgot-password"
+                className="text-xs text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              {...register('password')}
+              aria-invalid={!!errors.password}
+            />
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password.message}</p>
+            )}
+          </div>
 
-      <AccountLinkingDialog />
-    </div>
+          <Button
+            type="submit"
+            className="w-full h-11 bg-primary text-primary-foreground hover:bg-[var(--color-brand-blue-hover)]"
+            disabled={isSubmitting || socialLoading}
+          >
+            {isSubmitting ? 'Signing in...' : 'Sign in'}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{' '}
+          <Link href="/sign-up" className="font-medium text-primary hover:underline">
+            Sign up
+          </Link>
+        </p>
+
+        <AccountLinkingDialog />
+      </CardContent>
+    </Card>
   );
 }
