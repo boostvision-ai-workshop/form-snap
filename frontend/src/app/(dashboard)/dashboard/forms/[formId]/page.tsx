@@ -1,13 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FormSnippet } from '@/components/dashboard/form-snippet';
 import { FormSettingsForm } from '@/components/dashboard/form-settings-form';
 import { SubmissionTable } from '@/components/dashboard/submission-table';
+import { CsvExportButton } from '@/components/dashboard/csv-export-button';
 import { listForms } from '@/lib/api/forms';
 import type { FormListItem } from '@/lib/api/forms';
 
@@ -44,7 +47,13 @@ export default function FormDetailPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-8 w-64" />
+        {/* Breadcrumb skeleton */}
+        <Skeleton className="h-4 w-40" />
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-9 w-28" />
+        </div>
         <Skeleton className="h-48 w-full" />
       </div>
     );
@@ -74,8 +83,6 @@ export default function FormDetailPage() {
 
   // Build submit_url snippet for the Settings tab
   const submitUrl = form.submit_url;
-  // html_snippet is not available from FormListItem; the snippet component builds
-  // a representative snippet from the submit_url for display purposes.
   const htmlSnippet = [
     `<form action="${submitUrl}" method="POST">`,
     `  <input name="name" type="text" required />`,
@@ -87,15 +94,37 @@ export default function FormDetailPage() {
   ].join('\n');
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{form.name}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {form.submission_count}{' '}
-          {form.submission_count === 1 ? 'submission' : 'submissions'}
-        </p>
+    <div className="space-y-4">
+      {/* Breadcrumb */}
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-1 text-sm text-muted-foreground"
+      >
+        <Link
+          href="/dashboard"
+          className="hover:text-foreground transition-colors"
+        >
+          Forms
+        </Link>
+        <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span className="text-foreground font-medium truncate max-w-[240px]">
+          {form.name}
+        </span>
+      </nav>
+
+      {/* Page header */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">{form.name}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {form.submission_count}{' '}
+            {form.submission_count === 1 ? 'submission' : 'submissions'}
+          </p>
+        </div>
+        <CsvExportButton formId={formId} formName={form.name} />
       </div>
 
+      {/* Tabs */}
       <Tabs defaultValue="inbox">
         <TabsList>
           <TabsTrigger value="inbox">Inbox</TabsTrigger>
@@ -103,15 +132,15 @@ export default function FormDetailPage() {
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="inbox" className="pt-4">
+        <TabsContent value="inbox" className="mt-4">
           <SubmissionTable formId={formId} formName={form.name} />
         </TabsContent>
 
-        <TabsContent value="snippet" className="pt-4">
+        <TabsContent value="snippet" className="mt-4">
           <FormSnippet submitUrl={submitUrl} htmlSnippet={htmlSnippet} />
         </TabsContent>
 
-        <TabsContent value="settings" className="pt-4">
+        <TabsContent value="settings" className="mt-4">
           <FormSettingsForm
             form={form}
             onSaved={(updated) => {

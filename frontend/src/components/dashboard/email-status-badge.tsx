@@ -12,11 +12,27 @@ interface EmailStatusBadgeProps {
 
 const STATUS_CONFIG: Record<
   EmailStatus,
-  { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }
+  {
+    label: string;
+    className: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  }
 > = {
-  pending: { label: 'Notification pending', variant: 'secondary' },
-  sent: { label: 'Notification sent', variant: 'default' },
-  failed: { label: 'Notification not delivered', variant: 'destructive' },
+  sent: {
+    label: 'Notified',
+    variant: 'default',
+    className: 'badge-success',
+  },
+  pending: {
+    label: 'Sending\u2026',
+    variant: 'secondary',
+    className: 'badge-warning',
+  },
+  failed: {
+    label: 'Not delivered',
+    variant: 'destructive',
+    className: '',
+  },
 };
 
 export function EmailStatusBadge({ status, className }: EmailStatusBadgeProps) {
@@ -26,7 +42,11 @@ export function EmailStatusBadge({ status, className }: EmailStatusBadgeProps) {
       variant={config.variant}
       data-testid="email-status-badge"
       data-status={status}
-      className={cn('whitespace-nowrap text-xs', className)}
+      className={cn(
+        'whitespace-nowrap rounded-full text-xs font-medium',
+        config.className,
+        className,
+      )}
     >
       {config.label}
     </Badge>
