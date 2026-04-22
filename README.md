@@ -23,6 +23,45 @@ Build, scale, and ship faster with AI-assisted development workflows.
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
 - [Docker](https://www.docker.com/) (for containerized development)
 
+## Local Development (no Firebase/Supabase required)
+
+Run the full stack offline with SQLite and a mock auth provider. No Firebase project or Supabase credentials are needed.
+
+**Backend**
+
+```bash
+# 1. Copy the local env file
+cp backend/.env.local.example backend/.env
+
+# 2. Run all Alembic migrations against the local SQLite database
+uv run --directory backend alembic upgrade head
+
+# 3. Start the backend
+uv run --directory backend uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Frontend**
+
+```bash
+# 1. Copy the local env file
+cp frontend/.env.local.example frontend/.env.local
+
+# 2. Start the frontend
+pnpm --dir frontend dev
+```
+
+Open http://localhost:3000. The auth flow runs entirely in-browser using localStorage. Tokens look like `mock:<uid>:<email>:<verified>` and are verified by the backend without contacting Firebase.
+
+To mark your email as verified without a real email link, go to the verify-email page and click **"Local dev: mark email verified"** (visible only in mock mode).
+
+**How it works**
+
+- `AUTH_PROVIDER=mock` tells the backend to accept `mock:` tokens instead of Firebase tokens.
+- `DATABASE_URL=sqlite+aiosqlite:///./dev.db` creates a local SQLite file; all Alembic migrations run against it.
+- `NEXT_PUBLIC_AUTH_PROVIDER=mock` tells the frontend to use an in-browser auth provider backed by `localStorage` instead of the Firebase SDK.
+
+---
+
 ## Getting Started
 
 ### Step 1: Use This Template

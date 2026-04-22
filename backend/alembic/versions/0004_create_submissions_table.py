@@ -17,15 +17,24 @@ depends_on = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    is_sqlite = bind.dialect.name == "sqlite"
+
+    uuid_type = sa.Text() if is_sqlite else postgresql.UUID(as_uuid=True)
+    # JSONB on Postgres; plain JSON on SQLite
+    json_type = sa.JSON() if is_sqlite else postgresql.JSONB(astext_type=sa.Text())
+    # SQLite does not support the ::jsonb cast syntax in server_default
+    json_server_default = sa.text("'{}'") if is_sqlite else sa.text("'{}'::jsonb")
+
     op.create_table(
         "submissions",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("form_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", uuid_type, nullable=False),
+        sa.Column("form_id", uuid_type, nullable=False),
         sa.Column(
             "data",
-            postgresql.JSONB(astext_type=sa.Text()),
+            json_type,
             nullable=False,
-            server_default=sa.text("'{}'::jsonb"),
+            server_default=json_server_default,
         ),
         sa.Column(
             "email_status",
@@ -56,11 +65,22 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["form_id"], ["forms.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        "ix_submissions_form_id_created_at",
-        "submissions",
-        ["form_id", sa.text("created_at DESC")],
-    )
+
+    if is_sqlite:
+        # SQLite does not support DESC in multi-column index definitions the
+        # same way; fall back to a plain index on (form_id, created_at).
+        op.create_index(
+            "ix_submissions_form_id_created_at",
+            "submissions",
+            ["form_id", "created_at"],
+        )
+    else:
+        op.create_index(
+            "ix_submissions_form_id_created_at",
+            "submissions",
+            ["form_id", sa.text("created_at DESC")],
+        )
+
     op.create_index(
         "ix_submissions_email_status",
         "submissions",

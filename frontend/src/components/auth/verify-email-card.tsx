@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { sendEmailVerification } from 'firebase/auth';
 import { useAuth } from '@/contexts/auth-context';
+import { authProvider } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+
+const isMock = process.env.NEXT_PUBLIC_AUTH_PROVIDER === 'mock';
 
 export function VerifyEmailCard() {
   const { user } = useAuth();
@@ -14,6 +16,7 @@ export function VerifyEmailCard() {
   const [resending, setResending] = useState(false);
   const [resentAt, setResentAt] = useState<number | null>(null);
   const [checking, setChecking] = useState(false);
+  const [marking, setMarking] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const cooldownSeconds = 60;
@@ -25,7 +28,7 @@ export function VerifyEmailCard() {
     try {
       setResending(true);
       setAlert(null);
-      await sendEmailVerification(user);
+      await authProvider.sendEmailVerification(user);
       setResentAt(Date.now());
       setAlert({ type: 'success', message: 'Verification email sent — check your inbox.' });
     } catch {
@@ -53,6 +56,22 @@ export function VerifyEmailCard() {
     }
   }
 
+  /** Mock-only: instantly flip emailVerified and redirect to dashboard. */
+  async function handleMarkVerified() {
+    try {
+      setMarking(true);
+      setAlert(null);
+      if (authProvider.markEmailVerified) {
+        await authProvider.markEmailVerified();
+      }
+      router.push('/dashboard');
+    } catch {
+      setAlert({ type: 'error', message: 'Could not mark email as verified.' });
+    } finally {
+      setMarking(false);
+    }
+  }
+
   return (
     <Card className="w-full max-w-md" data-testid="verify-email-card">
       <CardHeader>
@@ -69,13 +88,15 @@ export function VerifyEmailCard() {
         </p>
 
         <div className="flex flex-col gap-3">
-          <Button
-            className="w-full"
-            onClick={handleResend}
-            disabled={isResendDisabled}
-          >
-            {resending ? 'Sending…' : resentAt !== null ? 'Resend email' : 'Resend verification email'}
-          </Button>
+          {!isMock && (
+            <Button
+              className="w-full"
+              onClick={handleResend}
+              disabled={isResendDisabled}
+            >
+              {resending ? 'Sending…' : resentAt !== null ? 'Resend email' : 'Resend verification email'}
+            </Button>
+          )}
 
           <Button
             className="w-full"
@@ -85,6 +106,18 @@ export function VerifyEmailCard() {
           >
             {checking ? 'Checking…' : "I've verified — go to dashboard"}
           </Button>
+
+          {isMock && (
+            <Button
+              className="w-full"
+              variant="secondary"
+              onClick={handleMarkVerified}
+              disabled={marking}
+              data-testid="mock-mark-verified"
+            >
+              {marking ? 'Marking…' : 'Local dev: mark email verified'}
+            </Button>
+          )}
         </div>
 
         {alert && (

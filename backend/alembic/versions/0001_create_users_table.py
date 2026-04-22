@@ -17,9 +17,15 @@ depends_on = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    is_sqlite = bind.dialect.name == "sqlite"
+
+    # Use TEXT for UUID columns on SQLite; native UUID type on Postgres
+    uuid_type = sa.Text() if is_sqlite else postgresql.UUID(as_uuid=True)
+
     op.create_table(
         "users",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", uuid_type, nullable=False),
         sa.Column("firebase_uid", sa.String(128), nullable=False),
         sa.Column("email", sa.String(255), nullable=False),
         sa.Column("display_name", sa.String(255), nullable=True),

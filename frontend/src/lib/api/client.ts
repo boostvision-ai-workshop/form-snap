@@ -1,4 +1,4 @@
-import { auth } from '@/lib/firebase/config';
+import { authProvider } from '@/lib/auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -13,11 +13,18 @@ export class ApiError extends Error {
   }
 }
 
+// Module-level cached user reference updated via onAuthStateChanged
+import type { AuthUser } from '@/lib/auth';
+let _currentUser: AuthUser | null = null;
+
+if (typeof window !== 'undefined') {
+  authProvider.onAuthStateChanged((u) => {
+    _currentUser = u;
+  });
+}
+
 async function getAuthToken(forceRefresh = false): Promise<string> {
-  if (!auth) {
-    throw new ApiError('Firebase auth not initialized', 500);
-  }
-  const user = auth.currentUser;
+  const user = _currentUser;
   if (!user) {
     throw new ApiError('Not authenticated', 401);
   }

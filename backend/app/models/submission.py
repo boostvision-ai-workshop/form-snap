@@ -3,9 +3,12 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import JSON, CheckConstraint, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+# JSONB on Postgres; plain JSON on SQLite (JSONB is unavailable there)
+_JSONB_OR_JSON = JSONB().with_variant(JSON(), "sqlite")
 
 from app.models.base import Base
 
@@ -34,7 +37,7 @@ class Submission(Base):
         nullable=False,
         index=True,
     )
-    data: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    data: Mapped[dict] = mapped_column(_JSONB_OR_JSON, nullable=False, default=dict)
     email_status: Mapped[str] = mapped_column(
         String(16),
         nullable=False,

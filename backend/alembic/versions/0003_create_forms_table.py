@@ -17,10 +17,15 @@ depends_on = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    is_sqlite = bind.dialect.name == "sqlite"
+
+    uuid_type = sa.Text() if is_sqlite else postgresql.UUID(as_uuid=True)
+
     op.create_table(
         "forms",
-        sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("owner_id", postgresql.UUID(as_uuid=True), nullable=False),
+        sa.Column("id", uuid_type, nullable=False),
+        sa.Column("owner_id", uuid_type, nullable=False),
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("redirect_url", sa.String(2048), nullable=True),
         sa.Column(

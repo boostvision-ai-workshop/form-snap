@@ -1,17 +1,10 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { User, onAuthStateChanged, type OAuthCredential } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase/config';
-import {
-  signInWithEmail,
-  signUpWithEmail,
-  signInWithGoogle as firebaseSignInWithGoogle,
-  signInWithGitHub as firebaseSignInWithGitHub,
-  signOutUser,
-  linkAccountWithCredential,
-} from '@/lib/firebase/auth';
+import type { OAuthCredential } from 'firebase/auth';
+import { authProvider } from '@/lib/auth';
+import type { AuthUser } from '@/lib/auth';
 
 export interface AccountLinkingInfo {
   email: string;
@@ -20,7 +13,7 @@ export interface AccountLinkingInfo {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
@@ -35,41 +28,71 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+/** Lazy-loaded Firebase social sign-in helpers — only imported when needed. */
+async function _firebaseSignInWithGoogle() {
+  const { signInWithGoogle } = await import('@/lib/firebase/auth');
+  return signInWithGoogle();
+}
+
+async function _firebaseSignInWithGitHub() {
+  const { signInWithGitHub } = await import('@/lib/firebase/auth');
+  return signInWithGitHub();
+}
+
+async function _firebaseLinkWithCredential(
+  credential: OAuthCredential,
+  provider: 'google' | 'github',
+) {
+  const { linkAccountWithCredential, signInWithGoogle, signInWithGitHub } = await import(
+    '@/lib/firebase/auth'
+  );
+  const result =
+    provider === 'google' ? await signInWithGoogle() : await signInWithGitHub();
+  await linkAccountWithCredential(result.user, credential);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [accountLinking, setAccountLinking] = useState<AccountLinkingInfo | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (!auth) {
-      return;
-    }
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = authProvider.onAuthStateChanged((u) => {
+      setUser(u);
       setLoading(false);
     });
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    await signInWithEmail(email, password);
+    await authProvider.signIn(email, password);
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
-    await signUpWithEmail(email, password);
+    await authProvider.signUp(email, password);
   }, []);
 
-  const signInWithGoogleHandler = useCallback(async () => {
-    await firebaseSignInWithGoogle();
+  const signInWithGoogle = useCallback(async () => {
+    if (process.env.NEXT_PUBLIC_AUTH_PROVIDER === 'mock') {
+      throw Object.assign(new Error('Google sign-in not available in mock mode'), {
+        code: 'auth/operation-not-supported-in-this-environment',
+      });
+    }
+    await _firebaseSignInWithGoogle();
   }, []);
 
-  const signInWithGitHubHandler = useCallback(async () => {
-    await firebaseSignInWithGitHub();
+  const signInWithGitHub = useCallback(async () => {
+    if (process.env.NEXT_PUBLIC_AUTH_PROVIDER === 'mock') {
+      throw Object.assign(new Error('GitHub sign-in not available in mock mode'), {
+        code: 'auth/operation-not-supported-in-this-environment',
+      });
+    }
+    await _firebaseSignInWithGitHub();
   }, []);
 
   const logout = useCallback(async () => {
-    await signOutUser();
+    await authProvider.signOut();
     router.push('/');
   }, [router]);
 
@@ -81,10 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const linkAccount = useCallback(async () => {
     if (!accountLinking) return;
     const { suggestedProvider, pendingCredential } = accountLinking;
-    const userCredential = suggestedProvider === 'google'
-      ? await firebaseSignInWithGoogle()
-      : await firebaseSignInWithGitHub();
-    await linkAccountWithCredential(userCredential.user, pendingCredential);
+    await _firebaseLinkWithCredential(pendingCredential, suggestedProvider);
     setAccountLinking(null);
   }, [accountLinking]);
 
@@ -95,8 +115,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         signIn,
         signUp,
-        signInWithGoogle: signInWithGoogleHandler,
-        signInWithGitHub: signInWithGitHubHandler,
+        signInWithGoogle,
+        signInWithGitHub,
         logout,
         getToken,
         accountLinking,

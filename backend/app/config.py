@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # Database (optional - app boots without it)
     DATABASE_URL: str = ""
 
+    # Auth provider: "firebase" (default, production) | "mock" (local dev)
+    AUTH_PROVIDER: str = "firebase"
+
     # Firebase
     FIREBASE_PROJECT_ID: str = ""
     FIREBASE_SERVICE_ACCOUNT_JSON: str = ""
