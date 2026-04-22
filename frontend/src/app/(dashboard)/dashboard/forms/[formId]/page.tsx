@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FormSnippet } from '@/components/dashboard/form-snippet';
 import { FormSettingsForm } from '@/components/dashboard/form-settings-form';
+import { SubmissionTable } from '@/components/dashboard/submission-table';
 import { listForms } from '@/lib/api/forms';
 import type { FormListItem } from '@/lib/api/forms';
 
@@ -103,18 +104,7 @@ export default function FormDetailPage() {
         </TabsList>
 
         <TabsContent value="inbox" className="pt-4">
-          {/* Batch-4: Submission inbox comes in the next batch */}
-          <div
-            data-testid="inbox-placeholder"
-            className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border py-16 text-center"
-          >
-            <p className="text-base font-medium text-foreground">
-              Inbox coming next batch
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Submission inbox will be available in the next release.
-            </p>
-          </div>
+          <SubmissionTable formId={formId} formName={form.name} />
         </TabsContent>
 
         <TabsContent value="snippet" className="pt-4">
