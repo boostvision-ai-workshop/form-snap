@@ -166,8 +166,8 @@ export function PricingCards({ tiers = DEFAULT_TIERS }: PricingCardsProps) {
               data-testid={`pricing-card-${tier.id}`}
               className={
                 tier.highlighted
-                  ? 'relative flex flex-col border-primary shadow-[var(--shadow-dialog)] ring-1 ring-primary/20'
-                  : 'relative flex flex-col'
+                  ? 'relative flex flex-col overflow-visible border-primary shadow-[var(--shadow-dialog)] ring-1 ring-primary/20'
+                  : 'relative flex flex-col overflow-visible'
               }
             >
               {tier.badge && (
