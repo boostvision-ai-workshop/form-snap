@@ -13,6 +13,12 @@ export function MarketingHeader() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/pricing"
+            className="hidden sm:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm px-2"
+          >
+            Pricing
+          </Link>
           <ThemeToggle />
           <Link href="/sign-in" className="hidden sm:inline-flex">
             <Button variant="ghost" className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">Sign in</Button>
