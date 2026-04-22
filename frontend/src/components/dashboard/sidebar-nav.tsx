@@ -1,34 +1,32 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 interface SidebarNavProps {
   icon: LucideIcon;
   label: string;
   href: string;
-  isActive: boolean;
-  isCollapsed: boolean;
 }
 
-export function SidebarNav({ icon: Icon, label, href, isActive, isCollapsed }: SidebarNavProps) {
+export function SidebarNav({ icon: Icon, label, href }: SidebarNavProps) {
+  const pathname = usePathname();
+  const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+
   return (
-    <Link href={href}>
-      <Button
-        variant="ghost"
-        className={cn(
-          'w-full justify-start transition-colors',
-          isActive && 'bg-accent text-accent-foreground',
-          !isActive && 'hover:bg-accent/50',
-          isCollapsed && 'justify-center'
-        )}
-        title={isCollapsed ? label : undefined}
-      >
-        <Icon className={cn('h-5 w-5', !isCollapsed && 'mr-2')} />
-        {!isCollapsed && <span className="transition-opacity duration-200">{label}</span>}
-      </Button>
+    <Link
+      href={href}
+      className={cn(
+        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+        isActive
+          ? 'bg-[var(--sidebar-accent)] text-[var(--sidebar-primary)] border-l-2 border-[var(--sidebar-primary)] -ml-[2px]'
+          : 'text-[var(--sidebar-foreground)] hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]'
+      )}
+    >
+      <Icon className="h-5 w-5 shrink-0" />
+      <span>{label}</span>
     </Link>
   );
 }

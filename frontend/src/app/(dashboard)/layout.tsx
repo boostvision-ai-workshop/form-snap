@@ -13,23 +13,24 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
     <AuthGuard>
-      <div className="flex h-screen">
-        <div className="hidden md:block">
-          <Sidebar isCollapsed={isCollapsed} onToggleCollapse={() => setIsCollapsed(!isCollapsed)} />
+      <div className="flex h-screen overflow-hidden bg-background">
+        {/* Desktop sidebar — fixed w-60 */}
+        <div className="hidden lg:block">
+          <Sidebar />
         </div>
-        
+
+        {/* Mobile sidebar — Sheet */}
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetContent side="left" className="p-0 w-64">
-            <Sidebar isCollapsed={false} onToggleCollapse={() => setIsMobileMenuOpen(false)} />
+          <SheetContent side="left" className="p-0 w-60">
+            <Sidebar />
           </SheetContent>
         </Sheet>
 
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <DashboardHeader onMobileMenuOpen={() => setIsMobileMenuOpen(true)} />
           <main className="flex-1 overflow-y-auto p-6">
             {children}

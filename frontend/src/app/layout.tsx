@@ -14,8 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Micro SaaS Agent",
-  description: "Build your SaaS product with AI agent assistance",
+  title: "FormSnap",
+  description: "The fastest way to add forms to any website. No backend required.",
+  icons: {
+    icon: "/form-snap.svg",
+    shortcut: "/form-snap.svg",
+  },
 };
 
 export default function RootLayout({
