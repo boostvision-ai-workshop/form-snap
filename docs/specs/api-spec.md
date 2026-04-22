@@ -6,6 +6,8 @@
 > - `POST /f/{formId}` — mounted on the FastAPI `app` directly (NOT under `/api/v1`). PRD §8 makes this a public contract.
 > - `GET/POST/PATCH/DELETE /api/v1/...` — mounted on `app.api.v1.router.api_router` with prefix `/api/v1`.
 
+> **Reconciliation note (2026-04-22)**: Batches 1–4 are shipped and every endpoint below is live and covered by tests. PRD §0 "Visual Assets" was added after ship and has **zero impact on API contracts** — no new endpoints, no request/response schema changes, no auth changes. §0 affects presentation (tokens, layout, CTA styling) only; see `technical-spec.md` §0 and `delivery-plan.md` UI Polish Phase for the presentation workstream.
+
 ---
 
 ## 1. Authentication

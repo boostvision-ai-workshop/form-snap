@@ -3,6 +3,8 @@
 > Three entities: `profile` (Firebase mirror), `form` (owned endpoint), `submission` (opaque payload).
 > Per `technical-spec.md` §2.3, the `profile` entity reuses the existing `users` table; we add one column (`email_verified`) via migration `0002`. Two new tables (`forms`, `submissions`) are added in `0003` and `0004`.
 
+> **Reconciliation note (2026-04-22)**: Batches 1–4 have been shipped; migrations `0001` → `0004` exist in `backend/alembic/versions/` and match this spec. PRD §0 "Visual Assets" was added after ship — it is a presentation-layer declaration and has **zero impact on schema, columns, indexes, constraints, or migrations**. No change to this document was required beyond this reconciliation note.
+
 ---
 
 ## 1. Entity: profile (table: `users` — existing)

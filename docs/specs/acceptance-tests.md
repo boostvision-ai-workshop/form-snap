@@ -3,7 +3,9 @@
 > Two-layer format per AT: business scenario (Given/When/Then) + automation hints (API path / UI selector / assertion / preconditions).
 > Coverage: every PRD §3 user story has ≥ 1 AT; every endpoint in `api-spec.md` has ≥ 1 API-level AT; all PRD edge cases (invalid formId, body > 100 KB, honeypot, email failure, unverified gating, CSV column union, deletion cascade) are covered.
 > UI selectors use `data-testid` attributes the Engineer will add; if no Designer reference is available at code time, selectors marked `[TBD-by-designer]` may be substituted with semantic queries by QA.
-> Sequential IDs `AT-001` … `AT-024`. IDs are permanent.
+> Sequential IDs `AT-001` … `AT-024` (plus `AT-006a`). IDs are permanent.
+
+> **Reconciliation note (2026-04-22)**: PRD §0 "Visual Assets" was added after Batches 1–4 shipped. Per user instruction, AT IDs and batch assignments are **unchanged**. The §0 mockup and brand palette are already covered by the existing "QA Layer 3 — UI Design" verification step in `delivery-plan.md` (and `CLAUDE.md` §3 "3-layer verification"); the acceptance tests below are functional (Layers 1+2) and do NOT need to be rewritten for the visual source-of-truth addition. Each UI-level AT below has had a brief "Visual parity" note appended to its `Notes` field so QA Layer 3 has an explicit hook.
 
 ## User-story → AT mapping (forward index)
 
@@ -53,7 +55,7 @@ And I am redirected to `/verify-email` with a "check your inbox" reminder
 - Preconditions: Firebase Auth project configured; test creates a unique email each run (e.g., `qa-{uuid}@example.com`)
 - Screenshot: `evidence/AT-001-signup-then-verify-reminder.png`
 
-**Notes**: QA can self-register via Firebase Auth REST API (`signUp` endpoint) without UI when running pure API tests.
+**Notes**: QA can self-register via Firebase Auth REST API (`signUp` endpoint) without UI when running pure API tests. **Visual parity (QA Layer 3)**: sign-up + verify-email panels MUST match row 2 of `docs/prd/formsnap_prd_design.png`; CTA uses brand gradient (`#2DA9FF→#B62CFF`) or solid `#4361EE` per design tokens.
 
 ---
 
@@ -75,6 +77,8 @@ And the row exposes a one-click "Copy HTML snippet" control
 - UI Assertion: form-row text contains "Personal site contact"; submit URL string starts with the configured `PUBLIC_SUBMIT_BASE_URL` and ends with the form's UUID
 - Preconditions: signed-in & verified user (use AT-001 result + force `email_verified=true` via Firebase Admin SDK in test setup)
 - Screenshot: `evidence/AT-002-form-created.png`
+
+**Notes**: **Visual parity (QA Layer 3)** — form-list table density, row actions, status badges, and "Create form" CTA styling MUST match row 5 of `docs/prd/formsnap_prd_design.png`. The CTA uses the brand sparkle gradient per PRD §0.1 usage rule.
 
 ---
 
@@ -135,6 +139,8 @@ And the form's submissions are no longer visible on the dashboard
 - UI Assertion: form-row gone; navigating to `/dashboard/forms/{id}` shows a `[data-testid="form-not-found"]` empty state
 - Preconditions: form with 2 seeded submissions
 - Screenshot: `evidence/AT-005-delete-confirm-dialog.png`, `evidence/AT-005-list-after-delete.png`
+
+**Notes**: **Visual parity (QA Layer 3)** — confirm dialog styling (border radius, destructive action color, spacing) MUST match the modal conventions established in `docs/prd/formsnap_prd_design.png` (sampled from rows 5 + 11 which both show row-action menus).
 
 ---
 
@@ -343,6 +349,8 @@ And clicking a row expands to show the full JSON payload
 - Assertion: first row's `created_at` >= second row's; total visible rows across pages == 30
 - Preconditions: 30 seeded submissions with monotonically increasing `created_at`
 
+**Notes**: **Visual parity (QA Layer 3)** — inbox table density, header typography, pagination control, and empty-state treatment MUST match row 7 (Submissions list) of `docs/prd/formsnap_prd_design.png`. Expanded-row / detail panel follows the same neutral-surface palette (`#F6F7FF`, `#EDEBFF`) tokens.
+
 ---
 
 ## AT-016: GET /api/v1/forms/{id}/submissions paginates and enforces ownership (API)
@@ -378,6 +386,8 @@ And the file contains 13 lines (1 header + 12 data rows)
 - UI Selector: `[data-testid="export-csv-button"]`; assert browser download triggered (Playwright `page.expectDownload`)
 - API observed: `GET /api/v1/forms/{id}/submissions.csv` → `200` `Content-Type: text/csv; charset=utf-8`; `Content-Disposition` contains `attachment; filename=`
 - Assertion: downloaded file line count == 13; first line starts with `submitted_at,`
+
+**Notes**: **Visual parity (QA Layer 3)** — "Export CSV" button placement and secondary-action styling MUST match the toolbar conventions of row 7 of `docs/prd/formsnap_prd_design.png`.
 
 ---
 
@@ -438,6 +448,8 @@ And the inbox row in `/dashboard/forms/{id}` shows a "notification not delivered
 - DB assertion (after background task settles or polled): `email_status == 'failed'`, `email_attempts == 3`
 - UI Selector: `[data-testid="email-status-badge"][data-status="failed"]` text contains "notification not delivered"
 
+**Notes**: **Visual parity (QA Layer 3)** — status badge palette MUST use the warn / danger color sampled from `docs/prd/formsnap_prd_design.png` (Designer documents the exact hex in `design-system.md`); badge typography / border-radius matches the status chips shown in rows 5 + 7 of the mockup.
+
 ---
 
 ## AT-021: GET /api/v1/me returns and lazily provisions the profile
@@ -475,6 +487,8 @@ And calling `POST /api/v1/forms` directly returns `403 email_not_verified`
 - API: `POST /api/v1/forms` body `{"name":"x"}` with unverified-user token → `403 {"detail": "email_not_verified"}`
 - Preconditions: Firebase user exists with `email_verified=false`
 
+**Notes**: **Visual parity (QA Layer 3)** — disabled-CTA treatment + "verify email" banner MUST use the muted neutral surface tokens from PRD §0.1 (`#EDEBFF` / `#DCE6FF`) and the banner typography derived from row 2 of `docs/prd/formsnap_prd_design.png`.
+
 ---
 
 ## AT-023: After email verification, form creation is enabled
@@ -492,6 +506,8 @@ And `POST /api/v1/forms` succeeds with `201`
 - Test setup: use Firebase Admin SDK to flip `email_verified=true` on the test user, then re-fetch token (`forceRefresh=true`)
 - UI Selector: `[data-testid="create-form-button"]` no longer disabled; banner gone
 - API: `POST /api/v1/forms` → `201`
+
+**Notes**: **Visual parity (QA Layer 3)** — enabled "Create form" CTA MUST render the brand sparkle gradient (`#2DA9FF→#B62CFF`) or solid `#4361EE` per the primary-CTA rule in PRD §0.1.
 
 ---
 

@@ -3,6 +3,54 @@
 > Phase 1 architecture for FormSnap, a backend-as-an-endpoint for static-site forms.
 > Stack is locked by `AGENTS.md` (FastAPI + Firebase Auth + Supabase Postgres + Next.js 16 + Shadcn UI v2 + Tailwind v4). All decisions below honor those constraints. The PRD's "Technical Considerations" (PRD §8) explicitly overrides the original brief's mention of Next.js API Routes / Supabase Auth / Resend — only the locked stack is implemented.
 
+> **Reconciliation note (2026-04-22)**: PRD §0 "Visual Assets" was added after Batches 1–4 shipped. This spec has been updated **in place** to reference the new brand palette and full-UI mockup without altering the delivered architecture, data model, API contracts, or batch boundaries. All §0-related work is layered onto Phase 2 (Designer) token derivation and Phase 4 (QA Layer 3) visual parity checks; no backend or schema change is implied.
+
+## 0. Visual Assets — Source-of-Truth Linkage (PRD §0)
+
+PRD §0 declares two authoritative visual-reference artifacts that downstream phases MUST consume. This spec does NOT duplicate their content; it only anchors them for the Designer and Engineer phases.
+
+### 0.1 Brand icon & palette (from `docs/prd/form-snap.svg`)
+
+- Authoritative palette (derived from the icon gradient; Designer MUST surface these as `design-system.md` tokens):
+  - Primary cyan `#29B6F6`
+  - Brand blue (mid-stop) `#4361EE`
+  - Brand violet `#8A2BE2`
+  - Sparkle gradient `#2DA9FF → #B62CFF` (reserved for primary CTAs: "Create form", "Publish", "Upgrade", marketing Hero CTA)
+  - Neutral surface (document body) `#F6F7FF`
+  - Neutral pills / chips `#CDD4F9`, `#DCE6FF`, `#EDEBFF`
+- Raster fallback: `docs/prd/format-snap.png` (OG / social share / email signatures only).
+- Usage rules (carried over from PRD §0.1):
+  - SVG is preferred for favicon + marketing header logo.
+  - All Tailwind v4 CSS custom properties in `frontend/src/app/globals.css` that represent brand color MUST be derived from this palette (no ad-hoc hex values in components).
+  - Primary CTA gradient is the sparkle gradient OR solid `#4361EE` — Designer picks per surface; Engineer implements via CSS variables tokenized in `design-system.md`.
+
+### 0.2 Full UI reference mockup (`docs/prd/formsnap_prd_design.png`)
+
+- Treated as the **authoritative layout and visual source of truth** for every page the product ships.
+- Scope of the mockup (row-by-row) is documented in PRD §0.2. For **this spec**, the implemented surfaces (the narrower "static-site forms backend" product — Batches 1–4) map to the mockup's rows as follows:
+
+  | Implemented surface | Mockup row | Notes |
+  |---------------------|-----------|-------|
+  | `/` (marketing landing) | Row 1 — Marketing homepage | Hero + "Trusted by" logo strip |
+  | `/sign-in`, `/sign-up`, `/forgot-password` | Row 2 — Auth panels | Three-panel composition — FormSnap ships sign-in + sign-up; forgot-password reference is used for visual consistency only (not a shipped route in Batches 1–4) |
+  | `/dashboard` (form list) | Row 5 — Forms list | Table with status + per-row actions; FormSnap's "Create form" + row actions map 1:1 |
+  | `/dashboard/forms/{formId}` (Inbox + Settings tabs) | Rows 6 + 7 — Builder / Submissions list | Inbox tab uses row-7 table density; Settings tab uses row-9 "General" layout |
+  | `/submitted` | Derived from Row 1 success copy conventions | Minimal thank-you page |
+
+  Rows covering pricing (Row 3), dashboard KPI (Row 4), analytics (Row 8), billing (Row 10), team (Row 11), and integrations (Row 12) are **out of scope** for the currently-shipped product but MUST remain in the mockup reference so Designer can establish a consistent token + layout vocabulary.
+
+- Consumer rules:
+  - **Designer (Phase 2)** MUST extract layout spacing, sidebar width, header height, card border radius, table density, typography hierarchy, and non-brand colors (success / warn / danger, muted, border) from this PNG into `design-system.md` and `page-layouts.md`.
+  - **Engineer (Phase 3)** MUST render each implemented page to be side-by-side comparable with its corresponding region of the mockup. The mockup is the single visual acceptance target.
+  - **QA (Phase 4 Layer 3)** MUST perform side-by-side visual parity checks between the live UI and `docs/prd/formsnap_prd_design.png` for every page shipped in Batches 1–4.
+
+### 0.3 Impact on this spec
+
+- **No file structure change** is implied by §0.
+- **No API contract change** is implied by §0.
+- **No database schema change** is implied by §0.
+- The `globals.css` Tailwind v4 tokens should be *audited* against the §0.1 palette during Phase 2 (Designer) and refreshed if they drift. This audit is not an AT because PRD §0 is a visual-source-of-truth declaration, not a new user-visible feature — visual parity is already covered by QA Layer 3 in `delivery-plan.md`.
+
 ---
 
 ## 1. Overview
@@ -183,6 +231,8 @@ Each function awaits `apiClient(endpoint, init)` then `.json()` and returns a ty
 ---
 
 ## 3. Frontend Architecture
+
+> **Visual reference**: Every page described below maps to a region of `docs/prd/formsnap_prd_design.png` per §0.2. Designer (Phase 2) produces the token + layout derivations; Engineer implements against the mockup; QA Layer 3 verifies parity.
 
 ### 3.1 Pages, route groups, components
 
@@ -516,6 +566,7 @@ frontend/src/app/page.tsx                    # moved into (marketing)/
 | R8 | Existing `users` table being repurposed conflicts with future "real" user concepts | Low | Low | Renaming is reversible; documented as decision §2.3. |
 | R9 | `formId` is a UUID — long URL; users may complain | Low | Low | Acceptable for MVP. URL-safe base32 short id is a future enhancement. |
 | R10 | `BackgroundTasks` runs after response in single-process; under multi-worker (uvicorn workers) this is fine, but a future async worker (Gunicorn + uvloop) may need verification | Low | Low | Document; tested by AT-019. |
+| R11 | Shipped UI drifts from PRD §0.2 mockup (ad-hoc colors, wrong spacing, off-brand CTA treatment) | Medium | Medium | (a) Designer extracts tokens from §0.1 palette + §0.2 mockup into `design-system.md` as the single source for `globals.css` custom properties; (b) QA Layer 3 performs side-by-side comparison against `docs/prd/formsnap_prd_design.png` for every shipped page; (c) any post-ship visual fix is a follow-up "UI polish" task, not a breaking re-spec. |
 
 ---
 
@@ -601,3 +652,4 @@ Browser POST /f/{formId} → no auth → service path → persist + redirect/ack
 4. **`/sign-in` and `/sign-up` rename** of existing `/login` and `/signup` (decision §2.11). Engineer renames; the UI guard updates to point to `/sign-in`.
 5. **In-process email send via `BackgroundTasks`** (decision §2.6). No external queue. User accepts the failure mode in R1.
 6. **Move `app/page.tsx` into `(marketing)/`** to honor `STANDARDS.md` route group convention.
+7. **PRD §0 visual assets are treated as a layered source-of-truth, not a scope expansion.** The currently-shipped product covers the "static-site forms backend" surfaces (Batches 1–4). Mockup rows outside that scope (pricing, KPI dashboard, analytics, billing, team, integrations) stay in the reference for Designer vocabulary consistency but do NOT imply new features, endpoints, data models, or batches in this spec set.

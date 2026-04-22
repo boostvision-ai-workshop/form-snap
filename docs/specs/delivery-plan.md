@@ -1,7 +1,8 @@
 # Delivery Plan: FormSnap
 
 > Four feature batches, executed in order. Every AT-XXX from `acceptance-tests.md` appears in **exactly one** batch (no orphans, no duplicates).
-> No UI Polish Phase: PRD §"Design Reference" selects option 4 (no design source — Designer will generate suggestions from PRD only). The UI Polish section is omitted per Architect rule §16.
+
+> **Reconciliation note (2026-04-22)**: Batches 1–4 shipped. AT IDs and batch boundaries are **frozen** per user instruction. PRD §0 "Visual Assets" (added 2026-04-22) now provides a formal visual source of truth (`docs/prd/form-snap.svg` + `docs/prd/formsnap_prd_design.png`), which upgrades this plan's footer from "No UI Polish Phase" to a **UI Polish Phase** scoped to the five user-visible surfaces the product actually ships (see §UI Polish Phase below). The UI Polish Phase contains **no AT-XXX** — its acceptance criterion is visual parity with the PRD §0 mockup, per Architect rule §17. The 25 feature-level ATs are unchanged.
 
 ---
 
@@ -289,3 +290,72 @@ User MAY reorder during the review gate but this plan does not anticipate any re
 3. A Resend account with a verified sending domain and an API key.
 
 Items (1) and (2) block Batch-1 runtime verification. Item (3) blocks Batch-3 runtime verification (Batch-3 unit tests can use the `noop` provider).
+
+---
+
+## UI Polish Phase (requires PRD §0 visual references)
+
+Execute **after** all four feature batches pass QA Layers 1+2. The user decides whether to run this phase or skip directly to Full QA Verification.
+
+UI Polish batches have **no AT-XXX acceptance tests** — the visual reference (`docs/prd/form-snap.svg` brand + `docs/prd/formsnap_prd_design.png` layout mockup) **is** the acceptance criterion, per Architect rule §17. Each batch below carries a specific mockup region to match.
+
+### UI-Polish-0: Shared Layout & Brand Tokens
+- **Scope**: Tailwind v4 tokens in `frontend/src/app/globals.css`; shared `Sidebar`, `Header`, `Footer`, and navigation bar; favicon + marketing logo swap to `docs/prd/form-snap.svg`.
+- **Token derivation** (Designer → Engineer):
+  - Brand palette from PRD §0.1: `#29B6F6`, `#4361EE`, `#8A2BE2`, sparkle gradient `#2DA9FF→#B62CFF`.
+  - Neutral surfaces from PRD §0.1: `#F6F7FF`, `#CDD4F9`, `#DCE6FF`, `#EDEBFF`.
+  - Success / warn / danger / muted / border colors sampled by Designer from `docs/prd/formsnap_prd_design.png` and documented in `design-system.md`.
+  - Sidebar width, header height, card border-radius, table density, primary typography scale — sampled from the mockup.
+- **Pages affected**: all authenticated pages + marketing shell.
+- **Dependencies**: all feature batches (1–4) complete.
+- **Visual references**: `docs/prd/form-snap.svg`, `docs/prd/formsnap_prd_design.png` (rows 1, 4, 5, 6, 7, 9 for chrome conventions).
+- **Done when**: every `globals.css` custom property representing brand / neutral / semantic color is derived from the Designer's tokens (no ad-hoc hex values in components), and the sidebar + header render identically to the mockup at the shipped widths.
+
+### UI-Polish-1: Marketing landing (`/`) + `/submitted`
+- **Scope**: `frontend/src/app/(marketing)/page.tsx` and `frontend/src/app/(marketing)/submitted/page.tsx`.
+- **Visual reference**: `docs/prd/formsnap_prd_design.png` — row 1 (Marketing homepage hero + "Trusted by" logo strip).
+- **Dependencies**: UI-Polish-0.
+- **Done when**: Hero headline / sub / primary CTA gradient / trust-strip layout match row 1 side-by-side.
+
+### UI-Polish-2: Auth pages (`/sign-in`, `/sign-up`, `/verify-email`)
+- **Scope**: Three `(auth)/` pages.
+- **Visual reference**: `docs/prd/formsnap_prd_design.png` — row 2 (three-panel auth composition).
+- **Dependencies**: UI-Polish-0.
+- **Done when**: panel framing, input group styling, primary CTA treatment, and secondary link typography match row 2.
+
+### UI-Polish-3: Dashboard — Forms list (`/dashboard`)
+- **Scope**: `(dashboard)/dashboard/page.tsx`, `form-list.tsx`, `form-row.tsx`, `form-list-empty-state.tsx`, `create-form-dialog.tsx`, `delete-form-dialog.tsx`.
+- **Visual reference**: `docs/prd/formsnap_prd_design.png` — row 5 (Forms list table + status toggle + per-row actions).
+- **Dependencies**: UI-Polish-0.
+- **Done when**: table density, column typography, status badge palette, row-action menu, and the "Create form" gradient CTA match row 5.
+
+### UI-Polish-4: Form detail — Inbox tab (`/dashboard/forms/[formId]`)
+- **Scope**: Inbox tab: `submission-table.tsx`, `submission-row.tsx`, `submission-detail.tsx`, `email-status-badge.tsx`, `csv-export-button.tsx`.
+- **Visual reference**: `docs/prd/formsnap_prd_design.png` — row 7 (Submissions list: search + date filter + paginated table).
+- **Dependencies**: UI-Polish-0, UI-Polish-3 (row actions share patterns).
+- **Done when**: toolbar, filters, pagination, row-expand animation, and the email-status badge colors match row 7 tokens.
+
+### UI-Polish-5: Form detail — Settings tab (`/dashboard/forms/[formId]`)
+- **Scope**: Settings tab: `form-settings-form.tsx`, `form-snippet.tsx`, `copy-button.tsx`.
+- **Visual reference**: `docs/prd/formsnap_prd_design.png` — row 9 (Settings — General tab conventions).
+- **Dependencies**: UI-Polish-0.
+- **Done when**: label / input pairings, section spacing, "Save" primary button, and snippet card framing match row 9.
+
+### UI Polish execution order
+
+```
+UI-Polish-0 (tokens + chrome)          ← MUST run first
+  → UI-Polish-1 (marketing)
+  → UI-Polish-2 (auth)
+  → UI-Polish-3 (forms list)
+  → UI-Polish-4 (inbox)
+  → UI-Polish-5 (settings)
+```
+
+UI-Polish-0 is mandatory; subsequent polish batches can be run in user-preferred order because none depend on each other beyond the shared tokens.
+
+### QA posture for the UI Polish Phase
+
+- QA Layer 1 (API) and Layer 2 (UI functionality) — **already green** from feature batches; no re-run required unless a polish batch edits logic.
+- QA Layer 3 (UI Design) — **this is the phase's primary gate**. QA performs side-by-side screenshot comparison of each shipped page against its mockup region and records a per-batch visual-parity report in `docs/qa/ui-polish-<N>-report.md`.
+- No regressions to feature-level AT-XXX are permitted. If a polish edit breaks a functional AT, the Engineer rolls back and re-approaches via CSS-only changes.
