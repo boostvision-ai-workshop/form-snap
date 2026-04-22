@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Check, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,22 @@ interface PricingCardsProps {
 export function PricingCards({ tiers = DEFAULT_TIERS }: PricingCardsProps) {
   const [cycle, setCycle] = useState<BillingCycle>('monthly');
   const [pendingTier, setPendingTier] = useState<PricingTier | null>(null);
+  const router = useRouter();
+
+  function handleCtaClick(tier: PricingTier) {
+    // Enterprise → contact sales (stay on current modal-style path for now)
+    if (tier.monthlyPrice === null) {
+      setPendingTier(tier);
+      return;
+    }
+    // Free → straight to sign-up, no checkout needed
+    if (tier.monthlyPrice === 0) {
+      router.push('/sign-up');
+      return;
+    }
+    // Paid → checkout flow
+    router.push(`/checkout?plan=${tier.id}&cycle=${cycle}`);
+  }
 
   return (
     <>
@@ -203,7 +220,7 @@ export function PricingCards({ tiers = DEFAULT_TIERS }: PricingCardsProps) {
                 </ul>
                 <Button
                   data-testid={`pricing-cta-${tier.id}`}
-                  onClick={() => setPendingTier(tier)}
+                  onClick={() => handleCtaClick(tier)}
                   className={
                     tier.highlighted
                       ? 'btn-gradient w-full h-10 mt-auto'
@@ -220,14 +237,15 @@ export function PricingCards({ tiers = DEFAULT_TIERS }: PricingCardsProps) {
       </div>
 
       <Dialog open={pendingTier !== null} onOpenChange={(open) => !open && setPendingTier(null)}>
-        <DialogContent data-testid="pricing-coming-soon-dialog">
+        <DialogContent data-testid="pricing-contact-sales-dialog">
           <DialogHeader>
-            <DialogTitle>
-              {pendingTier ? `${pendingTier.name} — coming soon` : 'Coming soon'}
-            </DialogTitle>
+            <DialogTitle>Let&apos;s talk</DialogTitle>
             <DialogDescription>
-              Billing is not wired up yet — this is a demo build. Your account keeps
-              access to all currently-available features.
+              Enterprise plans are custom-quoted. Email{' '}
+              <a href="mailto:sales@formsnap.dev" className="text-primary underline">
+                sales@formsnap.dev
+              </a>{' '}
+              and we&apos;ll put together a proposal with SSO, SLA, and dedicated support.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

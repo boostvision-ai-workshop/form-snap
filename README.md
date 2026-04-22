@@ -1,8 +1,32 @@
-# Micro SaaS Agent
+# FormSnap — Micro SaaS Agent
 
 A full-stack template for building Micro SaaS products with multi-agent AI assistance. Ships with Next.js 16 frontend, FastAPI backend, Firebase Auth, Supabase Postgres, and an integrated 4-agent development system.
 
 Build, scale, and ship faster with AI-assisted development workflows.
+
+## Live Demo
+
+**https://boostvision-ai-workshop.github.io/form-snap/**
+
+Deployed on GitHub Pages as a static export. The frontend ships with a demo
+interceptor (`frontend/src/lib/api/demo-interceptor.ts`) that serves mock API
+responses from an in-memory store, so the full UX runs without a backend.
+
+### 60-Second Demo Script
+
+Follow this path during a live review and every core flow is exercised end-to-end:
+
+1. **Landing** — Open the live URL → click **Sign up** in the marketing header.
+2. **Auth** — On `/sign-in` click **Continue as demo user** (auto signs you in as `demo@formsnap.dev`).
+3. **Create form** — On `/dashboard` click **Create form**, name it *Event RSVP* → you land on the form detail page.
+4. **Get share link** — Switch to the **Settings** tab → copy the **Public share link** (first row).
+5. **Submit as a visitor** — Open the link in a new tab → fill in *Name / Email / Message* → **Submit**.
+6. **See it land** — Go back to the **Inbox** tab on the original tab → refresh → your submission is at the top with `sent` status.
+7. **Export** — Click **Download CSV** to confirm the submission is in the export.
+8. **Paid conversion** — Open `/pricing` → click **Start free trial** on the Pro card → fill the checkout form (card `4242 4242 4242 4242`, any future expiry, any CVC) → **Pay $19 billed monthly** → land on the payment-success screen with a receipt.
+9. **404 polish** — Type a bogus path like `/dashboard/nope` → the branded 404 page renders in the FormSnap style.
+
+Register → login → create → share → submit → export → pay — all in under a minute, zero backend dependencies.
 
 ## Features
 

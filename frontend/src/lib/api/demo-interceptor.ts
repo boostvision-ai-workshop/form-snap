@@ -58,6 +58,25 @@ export async function demoIntercept(
     return json(form, 201);
   }
 
+  // --- POST /api/v1/public/forms/:id/submissions (public, no auth) ---
+  const publicMatch = endpoint.match(/^\/api\/v1\/public\/forms\/([^/?]+)\/submissions$/);
+  if (publicMatch && method === 'POST') {
+    const formId = publicMatch[1];
+    const body = options.body
+      ? (JSON.parse(options.body as string) as Record<string, unknown>)
+      : {};
+    // Honeypot: ignore (don't persist) if _gotcha is non-empty.
+    if (typeof body._gotcha === 'string' && body._gotcha.trim().length > 0) {
+      return json({ ok: true }, 200);
+    }
+    // Strip honeypot from persisted data.
+    const { _gotcha: _h, ...data } = body;
+    void _h;
+    const item = demoStore.addSubmission(formId, data);
+    if (!item) return notFound('Form not found');
+    return json({ id: item.id }, 201);
+  }
+
   // Routes with formId segment
   // Match /api/v1/forms/:id  (PATCH, DELETE)
   // Match /api/v1/forms/:id/submissions(.csv)?(\?...)?
