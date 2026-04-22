@@ -66,11 +66,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    await authProvider.signIn(email, password);
+    const u = await authProvider.signIn(email, password);
+    // Set user synchronously so the next render (and the subsequent route
+    // navigation) sees the authenticated state without waiting for the
+    // onAuthStateChanged listener to propagate.
+    setUser(u);
+    setLoading(false);
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
-    await authProvider.signUp(email, password);
+    const u = await authProvider.signUp(email, password);
+    setUser(u);
+    setLoading(false);
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
