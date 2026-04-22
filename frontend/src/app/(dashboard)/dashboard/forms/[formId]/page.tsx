@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 import { FormSnippet } from '@/components/dashboard/form-snippet';
 import { FormSettingsForm } from '@/components/dashboard/form-settings-form';
+import { DeleteFormDialog } from '@/components/dashboard/delete-form-dialog';
 import { SubmissionTable } from '@/components/dashboard/submission-table';
 import { CsvExportButton } from '@/components/dashboard/csv-export-button';
 import { listForms } from '@/lib/api/forms';
@@ -19,10 +22,12 @@ export const dynamic = 'force-dynamic';
 export default function FormDetailPage() {
   const params = useParams<{ formId: string }>();
   const formId = params.formId;
+  const router = useRouter();
 
   const [form, setForm] = useState<FormListItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -128,7 +133,6 @@ export default function FormDetailPage() {
       <Tabs defaultValue="inbox">
         <TabsList>
           <TabsTrigger value="inbox">Inbox</TabsTrigger>
-          <TabsTrigger value="snippet">Embed snippet</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
@@ -136,21 +140,54 @@ export default function FormDetailPage() {
           <SubmissionTable formId={formId} formName={form.name} />
         </TabsContent>
 
-        <TabsContent value="snippet" className="mt-4">
-          <FormSnippet submitUrl={submitUrl} htmlSnippet={htmlSnippet} />
-        </TabsContent>
-
         <TabsContent value="settings" className="mt-4">
-          <FormSettingsForm
-            form={form}
-            onSaved={(updated) => {
-              setForm((prev) =>
-                prev ? { ...prev, ...updated } : prev
-              );
-            }}
-          />
+          <div className="space-y-8 max-w-2xl">
+            {/* Form settings card */}
+            <FormSettingsForm
+              form={form}
+              onSaved={(updated) => {
+                setForm((prev) =>
+                  prev ? { ...prev, ...updated } : prev
+                );
+              }}
+            />
+
+            {/* Embed snippet card */}
+            <FormSnippet submitUrl={submitUrl} htmlSnippet={htmlSnippet} />
+
+            <Separator />
+
+            {/* Danger zone */}
+            <section className="space-y-3">
+              <div>
+                <h2 className="text-base font-semibold text-foreground">
+                  Danger zone
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Deleting a form is irreversible and will permanently remove
+                  all submissions.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete form
+              </Button>
+            </section>
+          </div>
         </TabsContent>
       </Tabs>
+
+      {/* Delete dialog */}
+      <DeleteFormDialog
+        form={form}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onDeleted={() => {
+          router.push('/dashboard');
+        }}
+      />
     </div>
   );
 }

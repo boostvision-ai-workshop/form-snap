@@ -8,6 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { updateForm } from '@/lib/api/forms';
 import type { FormListItem } from '@/lib/api/forms';
 
@@ -70,58 +77,80 @@ export function FormSettingsForm({ form, onSaved }: FormSettingsFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-md">
-      <div className="space-y-1.5">
-        <Label htmlFor="form-name">Form name</Label>
-        <Input
-          id="form-name"
-          data-testid="form-name-settings-input"
-          {...register('name')}
-          disabled={saving}
-        />
-        {errors.name && (
-          <p className="text-sm text-destructive">{errors.name.message}</p>
-        )}
-      </div>
+    <Card>
+      <CardHeader className="border-b">
+        <CardTitle>Form settings</CardTitle>
+        <CardDescription>
+          Manage your form name and post-submit behaviour.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-lg">
+          {/* Form name */}
+          <div className="space-y-1.5">
+            <Label htmlFor="form-name">Form name</Label>
+            <Input
+              id="form-name"
+              data-testid="form-name-settings-input"
+              {...register('name')}
+              disabled={saving}
+            />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
+          </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="redirect-url">
-          Redirect URL{' '}
-          <span className="text-muted-foreground text-xs">(optional)</span>
-        </Label>
-        <Input
-          id="redirect-url"
-          data-testid="redirect-url-input"
-          placeholder="https://example.com/thanks"
-          {...register('redirect_url')}
-          disabled={saving}
-        />
-        {errors.redirect_url && (
-          <p className="text-sm text-destructive">
-            {errors.redirect_url.message}
-          </p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Where to send visitors after they submit. Defaults to the FormSnap
-          success page.
-        </p>
-      </div>
+          {/* Redirect URL */}
+          <div className="space-y-1.5">
+            <Label htmlFor="redirect-url">
+              Redirect URL{' '}
+              <span className="text-muted-foreground text-xs font-normal">
+                (optional)
+              </span>
+            </Label>
+            <Input
+              id="redirect-url"
+              data-testid="redirect-url-input"
+              placeholder="https://example.com/thanks"
+              {...register('redirect_url')}
+              disabled={saving}
+            />
+            {errors.redirect_url && (
+              <p className="text-sm text-destructive">
+                {errors.redirect_url.message}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Where to send visitors after they submit. Defaults to the
+              FormSnap success page.
+            </p>
+          </div>
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+          {/* Feedback alerts */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-      {success && (
-        <Alert>
-          <AlertDescription>Settings saved.</AlertDescription>
-        </Alert>
-      )}
+          {success && (
+            <Alert>
+              <AlertDescription>Settings saved.</AlertDescription>
+            </Alert>
+          )}
 
-      <Button type="submit" disabled={saving || !isDirty}>
-        {saving ? 'Saving…' : 'Save changes'}
-      </Button>
-    </form>
+          {/* Right-aligned Save button */}
+          <div className="flex justify-end pt-1">
+            <Button
+              type="submit"
+              disabled={saving || !isDirty}
+              className="bg-primary text-primary-foreground hover:bg-[var(--color-brand-blue-hover)]"
+            >
+              {saving ? 'Saving…' : 'Save changes'}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
