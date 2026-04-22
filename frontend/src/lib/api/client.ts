@@ -1,6 +1,9 @@
-import { auth } from '@/lib/firebase/config';
+import { authProvider } from '@/lib/auth';
+import type { AuthUser } from '@/lib/auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 export class ApiError extends Error {
   constructor(
@@ -13,11 +16,17 @@ export class ApiError extends Error {
   }
 }
 
+// Module-level cached user reference updated via onAuthStateChanged
+let _currentUser: AuthUser | null = null;
+
+if (typeof window !== 'undefined') {
+  authProvider.onAuthStateChanged((u) => {
+    _currentUser = u;
+  });
+}
+
 async function getAuthToken(forceRefresh = false): Promise<string> {
-  if (!auth) {
-    throw new ApiError('Firebase auth not initialized', 500);
-  }
-  const user = auth.currentUser;
+  const user = _currentUser;
   if (!user) {
     throw new ApiError('Not authenticated', 401);
   }
@@ -28,6 +37,17 @@ export async function apiClient(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<Response> {
+  // In demo mode, intercept all requests and serve from the in-memory store.
+  if (IS_DEMO) {
+    const { demoIntercept } = await import('./demo-interceptor');
+    const demoResponse = await demoIntercept(endpoint, options);
+    if (demoResponse !== null) {
+      return demoResponse;
+    }
+    // Unknown demo route — fall through to a 404 rather than hitting the network.
+    throw new ApiError('Not found (demo mode)', 404);
+  }
+
   const token = await getAuthToken(false);
 
   const response = await fetch(`${API_URL}${endpoint}`, {

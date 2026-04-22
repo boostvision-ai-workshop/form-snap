@@ -7,11 +7,14 @@ engine = None
 async_session_factory = None
 
 if settings.DATABASE_URL:
-    engine = create_async_engine(
-        settings.DATABASE_URL,
-        echo=False,
-        pool_pre_ping=True,
-    )
+    _is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+
+    _engine_kwargs: dict = {"echo": False}
+    if not _is_sqlite:
+        # pool_pre_ping keeps Postgres connections healthy; not supported on SQLite
+        _engine_kwargs["pool_pre_ping"] = True
+
+    engine = create_async_engine(settings.DATABASE_URL, **_engine_kwargs)
     async_session_factory = async_sessionmaker(
         engine,
         class_=AsyncSession,

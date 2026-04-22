@@ -1,197 +1,116 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { api } from '@/lib/api';
-import { useAuth } from '@/contexts/auth-context';
+import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { EmailVerificationGate } from '@/components/dashboard/email-verification-gate';
+import { FormList } from '@/components/dashboard/form-list';
+import { CreateFormDialog } from '@/components/dashboard/create-form-dialog';
+import { useProfile } from '@/contexts/profile-context';
+import { listForms } from '@/lib/api/forms';
+import type { FormListItem } from '@/lib/api/forms';
 
-export const dynamic = 'force-dynamic';
-
-interface UserInfo {
-  uid: string;
-  email: string;
-  email_verified: boolean;
-  id?: string;
-  display_name?: string | null;
-  avatar_url?: string | null;
-  created_at?: string;
-}
+const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const { profile } = useProfile();
+  const [forms, setForms] = useState<FormListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const isVerified = profile?.email_verified ?? false;
 
   useEffect(() => {
-    async function fetchUserInfo() {
+    if (!profile) return;
+    async function load() {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await api.get('/api/v1/users/me');
-        const data = await response.json();
-        setUserInfo(data);
+        const data = await listForms();
+        setForms(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load user info');
+        setError(err instanceof Error ? err.message : 'Failed to load forms');
       } finally {
         setLoading(false);
       }
     }
+    load();
+  }, [profile]);
 
-    if (user) {
-      fetchUserInfo();
-    }
-  }, [user]);
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <Skeleton className="h-10 w-48 mb-2" />
-          <Skeleton className="h-5 w-64" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-24" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-24" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-5 w-24" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-16" />
-            </CardContent>
-          </Card>
-        </div>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-72" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-          </CardContent>
-        </Card>
-      </div>
-    );
+  function handleFormCreated(form: FormListItem) {
+    setForms((prev) => [form, ...prev]);
   }
 
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
+  const filtered = search.trim()
+    ? forms.filter((f) =>
+        f.name.toLowerCase().includes(search.trim().toLowerCase()),
+      )
+    : forms;
 
   return (
     <div className="space-y-6">
-      {/* Page Heading */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
-        <p className="text-muted-foreground mt-2">
-          Welcome to your dashboard
-        </p>
+      {/* Page header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Forms</h1>
+          <p className="text-sm text-muted-foreground">Manage your forms</p>
+        </div>
+        {IS_DEMO ? (
+          <Button
+            data-testid="create-form-button"
+            disabled
+            title="Creating forms is disabled in the demo. Clone the repo to enable."
+            className="h-9 bg-primary text-primary-foreground hover:bg-[var(--color-brand-blue-hover)]"
+          >
+            Create form
+          </Button>
+        ) : (
+          <EmailVerificationGate>
+            {(verified) => (
+              <Button
+                data-testid="create-form-button"
+                disabled={!verified}
+                title={
+                  verified ? 'Create a new form' : 'Verify your email to create forms'
+                }
+                className="h-9 bg-primary text-primary-foreground hover:bg-[var(--color-brand-blue-hover)]"
+                onClick={() => verified && setCreateOpen(true)}
+              >
+                Create form
+              </Button>
+            )}
+          </EmailVerificationGate>
+        )}
       </div>
 
-      {/* Quick Stats */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Quick Stats</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">API Calls</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">—</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Projects</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold">—</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-                Active
-              </Badge>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+      {/* Search toolbar */}
+      <div className="relative w-72">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+        <Input
+          placeholder="Search forms…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9 h-9"
+        />
+      </div>
 
-      {/* User Profile Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Profile</CardTitle>
-          <CardDescription>
-            Your account information
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <dl className="space-y-4">
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">
-                User ID
-              </dt>
-              <dd className="text-sm font-mono">{userInfo?.uid}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">Email</dt>
-              <dd className="text-sm">{userInfo?.email}</dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-muted-foreground">
-                Email Verified
-              </dt>
-              <dd className="text-sm">
-                {userInfo?.email_verified ? 'Yes' : 'No'}
-              </dd>
-            </div>
-            {userInfo?.display_name && (
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">Display Name</dt>
-                <dd className="text-sm">{userInfo.display_name}</dd>
-              </div>
-            )}
-            {userInfo?.created_at && (
-              <div>
-                <dt className="text-sm font-medium text-muted-foreground">Member Since</dt>
-                <dd className="text-sm">{new Date(userInfo.created_at).toLocaleDateString()}</dd>
-              </div>
-            )}
-          </dl>
-        </CardContent>
-      </Card>
+      <FormList
+        forms={filtered}
+        loading={loading}
+        error={error}
+        isVerified={isVerified}
+        onCreateClick={() => setCreateOpen(true)}
+        onFormsChange={setForms}
+      />
+
+      <CreateFormDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={handleFormCreated}
+      />
     </div>
   );
 }

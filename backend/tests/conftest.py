@@ -9,6 +9,19 @@ from httpx import ASGITransport, AsyncClient
 from app.main import app
 
 
+@pytest.fixture(autouse=True)
+def _default_auth_provider_firebase(monkeypatch):
+    """Default tests to AUTH_PROVIDER=firebase so a local .env (mock mode)
+    doesn't break tests that rely on patching verify_firebase_token.
+
+    Tests that want the mock path explicitly set it via monkeypatch themselves.
+    """
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "AUTH_PROVIDER", "firebase")
+    yield
+
+
 @pytest_asyncio.fixture
 async def client():
     """Async HTTP client for testing FastAPI app without external services."""
@@ -20,8 +33,15 @@ async def client():
 
 
 @pytest.fixture
-def mock_firebase_verify():
-    """Patch verify_firebase_token for tests."""
+def mock_firebase_verify(monkeypatch):
+    """Patch verify_firebase_token for tests.
+
+    Also forces AUTH_PROVIDER=firebase so the Firebase dispatch branch runs
+    even when a local .env sets AUTH_PROVIDER=mock for dev.
+    """
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "AUTH_PROVIDER", "firebase")
     with patch("app.core.security.verify_firebase_token") as mock:
         yield mock
 

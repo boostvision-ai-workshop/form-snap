@@ -5,9 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import Image from 'next/image';
 import Link from 'next/link';
+import { assetPath } from '@/lib/asset-path';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -57,7 +60,7 @@ export function SignupForm() {
     try {
       setError(null);
       await signUp(data.email, data.password);
-      router.push('/dashboard');
+      router.push('/verify-email');
     } catch (err) {
       if (err instanceof TypeError && err.message.includes('fetch')) {
         setError('Network error. Please check your connection.');
@@ -119,81 +122,98 @@ export function SignupForm() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Create an account</h1>
-        <p className="text-sm text-muted-foreground">Enter your details to get started</p>
-      </div>
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="name@example.com"
-            autoComplete="email"
-            {...register('email')}
-            aria-invalid={!!errors.email}
-          />
-          {errors.email && (
-            <p className="text-sm text-destructive">{errors.email.message}</p>
-          )}
+    <Card className="w-full max-w-md shadow-[var(--shadow-dialog)] border border-border">
+      <CardHeader className="p-6 pb-0 space-y-0">
+        <div className="flex justify-center mb-5">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src={assetPath('/form-snap.svg')} alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
+            <span className="text-base font-semibold text-foreground">FormSnap</span>
+          </Link>
         </div>
+        <CardTitle className="text-xl font-semibold text-center">Create your account</CardTitle>
+        <CardDescription className="text-center text-sm text-muted-foreground pt-1">
+          Start collecting form submissions in minutes.
+        </CardDescription>
+      </CardHeader>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            {...register('password')}
-            aria-invalid={!!errors.password}
-          />
-          {errors.password && (
-            <p className="text-sm text-destructive">{errors.password.message}</p>
-          )}
-        </div>
+      <CardContent className="p-6 space-y-5">
+        {/* OAuth buttons first */}
+        <SocialButtons
+          onGoogleClick={handleGoogleSignIn}
+          onGitHubClick={handleGitHubSignIn}
+          loading={isSubmitting || socialLoading}
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            {...register('confirmPassword')}
-            aria-invalid={!!errors.confirmPassword}
-          />
-          {errors.confirmPassword && (
-            <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
-          )}
-        </div>
+        {/* Error alert */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-        <Button type="submit" className="w-full" disabled={isSubmitting || socialLoading}>
-          {isSubmitting ? 'Creating account...' : 'Sign up'}
-        </Button>
-      </form>
+        {/* Registration form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              autoComplete="email"
+              {...register('email')}
+              aria-invalid={!!errors.email}
+            />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
+          </div>
 
-      <SocialButtons
-        onGoogleClick={handleGoogleSignIn}
-        onGitHubClick={handleGitHubSignIn}
-        loading={isSubmitting || socialLoading}
-      />
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="new-password"
+              {...register('password')}
+              aria-invalid={!!errors.password}
+            />
+            {errors.password && (
+              <p className="text-sm text-destructive">{errors.password.message}</p>
+            )}
+          </div>
 
-      <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{' '}
-        <Link href="/login" className="font-medium text-primary hover:underline">
-          Sign in
-        </Link>
-      </p>
+          <div className="space-y-1.5">
+            <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              {...register('confirmPassword')}
+              aria-invalid={!!errors.confirmPassword}
+            />
+            {errors.confirmPassword && (
+              <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
+            )}
+          </div>
 
-      <AccountLinkingDialog />
-    </div>
+          <Button
+            type="submit"
+            className="w-full h-11 bg-primary text-primary-foreground hover:bg-[var(--color-brand-blue-hover)]"
+            disabled={isSubmitting || socialLoading}
+          >
+            {isSubmitting ? 'Creating account...' : 'Create account'}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Already have an account?{' '}
+          <Link href="/sign-in" className="font-medium text-primary hover:underline">
+            Log in
+          </Link>
+        </p>
+
+        <AccountLinkingDialog />
+      </CardContent>
+    </Card>
   );
 }

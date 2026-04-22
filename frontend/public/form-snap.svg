@@ -1,0 +1,55 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="120" y1="120" x2="904" y2="904" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#29B6F6"/>
+      <stop offset="52%" stop-color="#4361EE"/>
+      <stop offset="100%" stop-color="#8A2BE2"/>
+    </linearGradient>
+    <linearGradient id="sparkGrad" x1="520" y1="500" x2="830" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2DA9FF"/>
+      <stop offset="100%" stop-color="#B62CFF"/>
+    </linearGradient>
+    <linearGradient id="lineGrad" x1="300" y1="320" x2="560" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3A8DFF"/>
+      <stop offset="100%" stop-color="#5D63F5"/>
+    </linearGradient>
+    <linearGradient id="softGrad" x1="300" y1="420" x2="650" y2="780" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#D8DEFF"/>
+      <stop offset="100%" stop-color="#BEB8F2"/>
+    </linearGradient>
+    <filter id="shadow" x="180" y="140" width="700" height="730" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="18" flood-color="#5A47C2" flood-opacity="0.18"/>
+    </filter>
+    <filter id="sparkShadow" x="450" y="350" width="470" height="430" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#6B36FF" flood-opacity="0.20"/>
+    </filter>
+  </defs>
+
+  <!-- Transparent canvas; only the icon itself is drawn -->
+
+  <rect x="20" y="20" width="984" height="984" rx="160" fill="url(#bgGrad)"/>
+
+  <g filter="url(#shadow)">
+    <path d="M294 192H620C650 192 675 217 675 247V300L801 426V775C801 805 776 830 746 830H294C264 830 239 805 239 775V247C239 217 264 192 294 192Z" fill="#F6F7FF"/>
+    <path d="M675 300L801 426H725C697 426 675 404 675 376V300Z" fill="#DCE6FF"/>
+  </g>
+
+  <rect x="312" y="317" width="300" height="54" rx="27" fill="url(#lineGrad)"/>
+  <rect x="315" y="430" width="365" height="36" rx="18" fill="#CDD4F9"/>
+  <rect x="315" y="515" width="285" height="36" rx="18" fill="#CDD4F9"/>
+
+  <rect x="312" y="646" width="395" height="102" rx="28" fill="url(#softGrad)"/>
+  <circle cx="380" cy="697" r="28" fill="#96A3FF"/>
+
+  <g filter="url(#sparkShadow)">
+    <path d="M646 396
+             C666 487 701 521 792 523
+             C701 525 666 559 646 650
+             C626 559 591 525 500 523
+             C591 521 626 487 646 396Z"
+          fill="url(#sparkGrad)" stroke="#FFFFFF" stroke-width="18" stroke-linejoin="round"/>
+  </g>
+
+  <rect x="740" y="574" width="174" height="28" rx="14" fill="#EDEBFF" opacity="0.95"/>
+  <rect x="705" y="662" width="172" height="28" rx="14" fill="#EDEBFF" opacity="0.95"/>
+</svg>
