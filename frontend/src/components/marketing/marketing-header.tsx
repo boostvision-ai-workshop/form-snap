@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { assetPath } from '@/lib/asset-path';
 import { Button } from '@/components/ui/button';
 
 export function MarketingHeader() {
@@ -13,7 +14,7 @@ export function MarketingHeader() {
           href="/"
           className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
         >
-          <Image src="/form-snap.svg" alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
+          <Image src={assetPath('/form-snap.svg')} alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
           <span className="text-base font-semibold text-foreground">FormSnap</span>
         </Link>
 

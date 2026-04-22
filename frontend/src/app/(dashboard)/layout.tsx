@@ -6,8 +6,6 @@ import { DashboardHeader } from '@/components/dashboard/dashboard-header';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 
-export const dynamic = 'force-dynamic';
-
 export default function DashboardLayout({
   children,
 }: {

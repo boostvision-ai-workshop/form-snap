@@ -11,7 +11,7 @@ import { useProfile } from '@/contexts/profile-context';
 import { listForms } from '@/lib/api/forms';
 import type { FormListItem } from '@/lib/api/forms';
 
-export const dynamic = 'force-dynamic';
+const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 export default function DashboardPage() {
   const { profile } = useProfile();
@@ -58,21 +58,32 @@ export default function DashboardPage() {
           <h1 className="text-xl font-semibold text-foreground">Forms</h1>
           <p className="text-sm text-muted-foreground">Manage your forms</p>
         </div>
-        <EmailVerificationGate>
-          {(verified) => (
-            <Button
-              data-testid="create-form-button"
-              disabled={!verified}
-              title={
-                verified ? 'Create a new form' : 'Verify your email to create forms'
-              }
-              className="h-9 bg-primary text-primary-foreground hover:bg-[var(--color-brand-blue-hover)]"
-              onClick={() => verified && setCreateOpen(true)}
-            >
-              Create form
-            </Button>
-          )}
-        </EmailVerificationGate>
+        {IS_DEMO ? (
+          <Button
+            data-testid="create-form-button"
+            disabled
+            title="Creating forms is disabled in the demo. Clone the repo to enable."
+            className="h-9 bg-primary text-primary-foreground hover:bg-[var(--color-brand-blue-hover)]"
+          >
+            Create form
+          </Button>
+        ) : (
+          <EmailVerificationGate>
+            {(verified) => (
+              <Button
+                data-testid="create-form-button"
+                disabled={!verified}
+                title={
+                  verified ? 'Create a new form' : 'Verify your email to create forms'
+                }
+                className="h-9 bg-primary text-primary-foreground hover:bg-[var(--color-brand-blue-hover)]"
+                onClick={() => verified && setCreateOpen(true)}
+              >
+                Create form
+              </Button>
+            )}
+          </EmailVerificationGate>
+        )}
       </div>
 
       {/* Search toolbar */}

@@ -18,8 +18,6 @@ import { Monitor, Sun, Moon } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/auth-context';
 
-export const dynamic = 'force-dynamic';
-
 interface UserInfo {
   uid: string;
   email: string;

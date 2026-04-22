@@ -1,7 +1,8 @@
-import { auth } from '@/lib/firebase/config';
 import { apiClient, ApiError } from './client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 export interface SubmissionItem {
   id: string;
@@ -31,26 +32,75 @@ export async function listSubmissions(
 }
 
 /**
+ * Trigger a browser file download from a Response (blob).
+ */
+function _triggerDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+/**
  * Download all submissions as CSV.
  *
- * Fetches the streaming CSV endpoint using the Firebase token (via apiClient
- * internals) and triggers a browser download without navigating away.
+ * In demo mode: builds the CSV client-side from the in-memory store and
+ * triggers a download without any network request.
+ *
+ * In production mode: fetches the streaming CSV endpoint using the Firebase
+ * token and triggers a browser download without navigating away.
  */
 export async function downloadSubmissionsCsv(
   formId: string,
   formName: string,
 ): Promise<void> {
-  // We cannot use apiClient directly here because we need the raw blob, not
-  // parsed JSON. Replicate the token-injection logic.
-  if (!auth) {
-    throw new ApiError('Firebase auth not initialized', 500);
+  const fallbackFilename = `${formName.replace(/[^A-Za-z0-9._-]+/g, '-')}-submissions.csv`;
+
+  // --- Demo mode: generate CSV from store ---
+  if (IS_DEMO) {
+    const { demoIntercept } = await import('./demo-interceptor');
+    const response = await demoIntercept(
+      `/api/v1/forms/${formId}/submissions.csv`,
+      { method: 'GET' },
+    );
+    if (!response) {
+      throw new ApiError('Demo CSV not available', 404);
+    }
+    const blob = await response.blob();
+    const disposition = response.headers.get('content-disposition') || '';
+    const filenameMatch = disposition.match(/filename="?([^";]+)"?/);
+    const filename = filenameMatch?.[1] ?? fallbackFilename;
+    _triggerDownload(blob, filename);
+    return;
   }
-  const user = auth.currentUser;
-  if (!user) {
+
+  // --- Production mode: fetch streaming CSV from backend ---
+  // We cannot use apiClient directly here because we need the raw blob, not
+  // parsed JSON. Replicate the token-injection logic using the auth provider.
+  const { authProvider } = await import('@/lib/auth');
+
+  let _resolveToken: ((t: string | null) => void) | null = null;
+  const tokenPromise = new Promise<string | null>((resolve) => {
+    _resolveToken = resolve;
+  });
+  // Get the current user's token via a one-shot listener
+  const unsub = authProvider.onAuthStateChanged(async (u) => {
+    if (_resolveToken) {
+      _resolveToken(u ? await u.getIdToken(false) : null);
+      _resolveToken = null;
+    }
+  });
+  const token = await tokenPromise;
+  unsub();
+
+  if (!token) {
     throw new ApiError('Not authenticated', 401);
   }
 
-  let token = await user.getIdToken(false);
   let response = await fetch(
     `${API_URL}/api/v1/forms/${formId}/submissions.csv`,
     {
@@ -60,11 +110,26 @@ export async function downloadSubmissionsCsv(
 
   // Single retry on 401 with forced token refresh
   if (response.status === 401) {
-    token = await user.getIdToken(true);
+    const { authProvider: ap } = await import('@/lib/auth');
+    let _resolveToken2: ((t: string | null) => void) | null = null;
+    const tokenPromise2 = new Promise<string | null>((resolve) => {
+      _resolveToken2 = resolve;
+    });
+    const unsub2 = ap.onAuthStateChanged(async (u) => {
+      if (_resolveToken2) {
+        _resolveToken2(u ? await u.getIdToken(true) : null);
+        _resolveToken2 = null;
+      }
+    });
+    const freshToken = await tokenPromise2;
+    unsub2();
+
+    if (!freshToken) throw new ApiError('Not authenticated', 401);
+
     response = await fetch(
       `${API_URL}/api/v1/forms/${formId}/submissions.csv`,
       {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${freshToken}` },
       },
     );
   }
@@ -79,22 +144,12 @@ export async function downloadSubmissionsCsv(
     );
   }
 
-  // Determine filename from Content-Disposition or construct a fallback
   const disposition = response.headers.get('content-disposition') || '';
   const filenameMatch = disposition.match(/filename="?([^";]+)"?/);
-  const filename =
-    filenameMatch?.[1] ??
-    `${formName.replace(/[^A-Za-z0-9._-]+/g, '-')}-submissions.csv`;
+  const filename = filenameMatch?.[1] ?? fallbackFilename;
 
   const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  _triggerDownload(blob, filename);
 }
 
 export { ApiError };

@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Image from 'next/image';
 import Link from 'next/link';
+import { assetPath } from '@/lib/asset-path';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -125,7 +126,7 @@ export function SignupForm() {
       <CardHeader className="p-6 pb-0 space-y-0">
         <div className="flex justify-center mb-5">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/form-snap.svg" alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
+            <Image src={assetPath('/form-snap.svg')} alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
             <span className="text-base font-semibold text-foreground">FormSnap</span>
           </Link>
         </div>

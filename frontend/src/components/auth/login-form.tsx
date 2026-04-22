@@ -7,15 +7,19 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Image from 'next/image';
 import Link from 'next/link';
+import { assetPath } from '@/lib/asset-path';
 import { useAuth } from '@/contexts/auth-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 import { getCredentialFromError } from '@/lib/firebase/auth';
 import { SocialButtons } from './social-buttons';
 import { AccountLinkingDialog } from './account-linking-dialog';
+
+const IS_DEMO = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email format'),
@@ -29,6 +33,8 @@ export function LoginForm() {
   const { signIn, signInWithGoogle, signInWithGitHub, setAccountLinking } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [socialLoading, setSocialLoading] = useState(false);
+
+  const [demoLoading, setDemoLoading] = useState(false);
 
   const {
     register,
@@ -93,6 +99,19 @@ export function LoginForm() {
     }
   };
 
+  const handleDemoSignIn = async () => {
+    try {
+      setDemoLoading(true);
+      setError(null);
+      await signIn('demo@formsnap.dev', 'demo');
+      router.push('/dashboard');
+    } catch {
+      setError('Failed to enter demo. Please try again.');
+    } finally {
+      setDemoLoading(false);
+    }
+  };
+
   const handleGitHubSignIn = async () => {
     try {
       setSocialLoading(true);
@@ -123,7 +142,7 @@ export function LoginForm() {
       <CardHeader className="p-6 pb-0 space-y-0">
         <div className="flex justify-center mb-5">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/form-snap.svg" alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
+            <Image src={assetPath('/form-snap.svg')} alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
             <span className="text-base font-semibold text-foreground">FormSnap</span>
           </Link>
         </div>
@@ -202,6 +221,26 @@ export function LoginForm() {
             Sign up
           </Link>
         </p>
+
+        {IS_DEMO && (
+          <>
+            <Separator />
+            <div className="space-y-2 text-center">
+              <p className="text-xs text-muted-foreground">
+                Just browsing? Try the live demo instantly.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-10"
+                onClick={handleDemoSignIn}
+                disabled={demoLoading || isSubmitting || socialLoading}
+              >
+                {demoLoading ? 'Loading demo…' : 'Continue as demo user'}
+              </Button>
+            </div>
+          </>
+        )}
 
         <AccountLinkingDialog />
       </CardContent>

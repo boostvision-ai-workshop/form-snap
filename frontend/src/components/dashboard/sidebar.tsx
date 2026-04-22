@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { assetPath } from '@/lib/asset-path';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { SidebarNav } from './sidebar-nav';
@@ -44,7 +45,7 @@ export function Sidebar() {
       {/* Brand header */}
       <div className="h-14 flex items-center px-4 border-b" style={{ borderColor: 'var(--sidebar-border)' }}>
         <Link href="/dashboard" className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
-          <Image src="/form-snap.svg" alt="FormSnap logo" width={24} height={24} className="h-6 w-6" />
+          <Image src={assetPath('/form-snap.svg')} alt="FormSnap logo" width={24} height={24} className="h-6 w-6" />
           <span className="text-sm font-semibold text-foreground">FormSnap</span>
         </Link>
       </div>

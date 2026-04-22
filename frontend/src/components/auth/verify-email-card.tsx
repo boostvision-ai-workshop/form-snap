@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { assetPath } from '@/lib/asset-path';
 import { Mail } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { authProvider } from '@/lib/auth';
@@ -80,7 +81,7 @@ export function VerifyEmailCard() {
       <CardHeader className="p-6 pb-0 space-y-0 text-center">
         <div className="flex justify-center mb-5">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/form-snap.svg" alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
+            <Image src={assetPath('/form-snap.svg')} alt="FormSnap logo" width={28} height={28} className="h-7 w-7" />
             <span className="text-base font-semibold text-foreground">FormSnap</span>
           </Link>
         </div>
