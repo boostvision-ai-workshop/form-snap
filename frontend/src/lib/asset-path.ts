@@ -14,7 +14,9 @@ const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
 export function assetPath(src: string): string {
   if (!BASE_PATH || src.startsWith('http')) return src;
-  // Avoid double-prefix
-  if (src.startsWith(BASE_PATH)) return src;
+  // Avoid double-prefix — but require a path separator after BASE_PATH so that
+  // assets like "/form-snap.svg" are NOT mistakenly treated as already-prefixed
+  // when BASE_PATH is "/form-snap".
+  if (src === BASE_PATH || src.startsWith(`${BASE_PATH}/`)) return src;
   return `${BASE_PATH}${src}`;
 }
