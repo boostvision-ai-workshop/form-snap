@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import SettingsPage from '../app/(dashboard)/settings/page';
+import SettingsPage from '../app/(dashboard)/dashboard/settings/page';
 
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
