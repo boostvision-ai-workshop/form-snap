@@ -13,7 +13,11 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 
-if (typeof window !== 'undefined') {
+// Skip Firebase SDK init when mock-auth is active. This keeps local dev
+// (no Firebase creds) from crashing on `auth/invalid-api-key`.
+const isMockAuth = process.env.NEXT_PUBLIC_AUTH_PROVIDER === 'mock';
+
+if (typeof window !== 'undefined' && !isMockAuth && firebaseConfig.apiKey) {
   app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   auth = getAuth(app);
 }

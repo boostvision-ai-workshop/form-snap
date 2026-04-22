@@ -86,10 +86,15 @@ if (typeof window !== 'undefined') {
   _currentUser = _loadFromStorage();
 }
 
+function _uidFor(email: string): string {
+  // Deterministic uid so seeded backend rows line up with mock frontend users.
+  return `mock-${email.toLowerCase().replace(/[^a-z0-9]/gi, '-')}`;
+}
+
 export const mockAuthProvider: AuthProvider = {
   async signUp(email, _password) {
     const user: StoredUser = {
-      uid: `mock-${email.replace(/[^a-z0-9]/gi, '-')}-${Date.now()}`,
+      uid: _uidFor(email),
       email,
       emailVerified: false,
       displayName: null,
@@ -99,15 +104,16 @@ export const mockAuthProvider: AuthProvider = {
   },
 
   async signIn(email, _password) {
-    // Accept any password for local dev convenience
+    // Accept any password for local dev convenience. If no matching stored
+    // account exists (e.g. first-run after seeding), auto-create one so the
+    // seeded backend data is immediately reachable.
     const stored = _loadFromStorage();
-    if (!stored || stored.email !== email) {
-      throw Object.assign(new Error('No account found with this email'), {
-        code: 'auth/user-not-found',
-      });
-    }
-    _setUser(stored);
-    return _wrapStored(stored);
+    const user: StoredUser =
+      stored && stored.email === email
+        ? stored
+        : { uid: _uidFor(email), email, emailVerified: true, displayName: null };
+    _setUser(user);
+    return _wrapStored(user);
   },
 
   async signOut() {

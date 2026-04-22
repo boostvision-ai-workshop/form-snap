@@ -36,9 +36,14 @@ cp backend/.env.local.example backend/.env
 # 2. Run all Alembic migrations against the local SQLite database
 uv run --directory backend alembic upgrade head
 
-# 3. Start the backend
+# 3. Seed a demo user + forms + submissions (idempotent)
+uv run --directory backend python scripts/seed_local.py
+
+# 4. Start the backend
 uv run --directory backend uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
+
+The seed script creates a user `demo@formsnap.dev` with two forms and five submissions. Sign in with that email in the mock-auth frontend (any password) and the seeded data will be visible.
 
 **Frontend**
 
