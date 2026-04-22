@@ -151,7 +151,7 @@ export function FormDetailClient() {
             />
 
             {/* Embed snippet card */}
-            <FormSnippet submitUrl={submitUrl} htmlSnippet={htmlSnippet} />
+            <FormSnippet submitUrl={submitUrl} htmlSnippet={htmlSnippet} formId={formId} />
 
             <Separator />
 

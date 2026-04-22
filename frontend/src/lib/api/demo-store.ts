@@ -281,4 +281,26 @@ export const demoStore = {
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
   },
+
+  /** Append a public submission. Returns the new item, or null if the form does not exist. */
+  addSubmission(
+    formId: string,
+    data: Record<string, unknown>,
+  ): SubmissionItem | null {
+    const form = _forms.find((f) => f.id === formId);
+    if (!form) return null;
+    const item: SubmissionItem = {
+      id: `sub-${Date.now()}`,
+      created_at: isoNow(),
+      data,
+      email_status: 'sent',
+      email_attempts: 1,
+    };
+    if (!_submissions[formId]) _submissions[formId] = [];
+    _submissions[formId].unshift(item);
+    // Bump the form's submission_count and last_submission_at
+    form.submission_count = _submissions[formId].length;
+    form.last_submission_at = item.created_at;
+    return item;
+  },
 };
