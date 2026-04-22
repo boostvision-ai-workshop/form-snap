@@ -166,8 +166,8 @@ export function PricingCards({ tiers = DEFAULT_TIERS }: PricingCardsProps) {
               data-testid={`pricing-card-${tier.id}`}
               className={
                 tier.highlighted
-                  ? 'relative border-primary shadow-[var(--shadow-dialog)] ring-1 ring-primary/20'
-                  : 'relative'
+                  ? 'relative flex flex-col border-primary shadow-[var(--shadow-dialog)] ring-1 ring-primary/20'
+                  : 'relative flex flex-col'
               }
             >
               {tier.badge && (
@@ -192,20 +192,8 @@ export function PricingCards({ tiers = DEFAULT_TIERS }: PricingCardsProps) {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-5">
-                <Button
-                  data-testid={`pricing-cta-${tier.id}`}
-                  onClick={() => setPendingTier(tier)}
-                  className={
-                    tier.highlighted
-                      ? 'btn-gradient w-full h-10'
-                      : 'w-full h-10'
-                  }
-                  variant={tier.highlighted ? 'default' : 'outline'}
-                >
-                  {tier.ctaLabel}
-                </Button>
-                <ul className="space-y-2.5">
+              <CardContent className="flex flex-col flex-1 gap-6">
+                <ul className="space-y-2.5 flex-1">
                   {tier.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-sm">
                       <Check className="mt-0.5 size-4 shrink-0 text-primary" />
@@ -213,6 +201,18 @@ export function PricingCards({ tiers = DEFAULT_TIERS }: PricingCardsProps) {
                     </li>
                   ))}
                 </ul>
+                <Button
+                  data-testid={`pricing-cta-${tier.id}`}
+                  onClick={() => setPendingTier(tier)}
+                  className={
+                    tier.highlighted
+                      ? 'btn-gradient w-full h-10 mt-auto'
+                      : 'w-full h-10 mt-auto'
+                  }
+                  variant={tier.highlighted ? 'default' : 'outline'}
+                >
+                  {tier.ctaLabel}
+                </Button>
               </CardContent>
             </Card>
           );
