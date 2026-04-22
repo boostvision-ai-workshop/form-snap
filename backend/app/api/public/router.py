@@ -10,7 +10,7 @@ import json
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -28,6 +28,64 @@ _HONEYPOT_UUID = "00000000-0000-0000-0000-000000000000"
 _URLENCODED = "application/x-www-form-urlencoded"
 _JSON_CT = "application/json"
 _MULTIPART = "multipart/form-data"
+
+
+@router.get("/f/{form_id}", include_in_schema=False)
+async def submit_endpoint_info(
+    form_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> HTMLResponse:
+    """Browser-friendly helper page when someone opens the submit URL via GET.
+
+    This endpoint only accepts POST, so GET would otherwise return
+    "405 Method Not Allowed". Instead, render a small HTML page explaining
+    how to use the endpoint.
+    """
+    form = await form_service.get_form_for_public_submit(db, form_id)
+    form_known = form is not None
+    form_name = form.name if form is not None else "Unknown form"
+    submit_url = f"{settings.PUBLIC_SUBMIT_BASE_URL.rstrip('/')}/f/{form_id}"
+
+    status_code = 200 if form_known else 404
+    body = f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FormSnap submit endpoint</title>
+<style>
+  body {{ font-family: -apple-system, system-ui, sans-serif; max-width: 640px;
+         margin: 3rem auto; padding: 0 1.25rem; color: #1f2937; line-height: 1.55; }}
+  h1 {{ font-size: 1.5rem; margin-bottom: 0.25rem; }}
+  .muted {{ color: #6b7280; }}
+  .warn {{ background: #fef3c7; border: 1px solid #f59e0b; color: #78350f;
+           padding: 0.75rem 1rem; border-radius: 6px; margin: 1rem 0; }}
+  code, pre {{ background: #f3f4f6; padding: 0.15rem 0.4rem; border-radius: 4px;
+               font-family: ui-monospace, Menlo, monospace; font-size: 0.875rem; }}
+  pre {{ padding: 0.75rem 1rem; overflow-x: auto; }}
+  .ok {{ background: #ecfdf5; border: 1px solid #10b981; color: #065f46;
+         padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.875rem; display: inline-block; }}
+</style>
+</head>
+<body>
+<h1>FormSnap submit endpoint</h1>
+<p class="muted">This URL only accepts <strong>POST</strong> requests from an HTML form or a JSON client.</p>
+
+{'<div class="warn">⚠️ Form <code>' + str(form_id) + '</code> was not found. Double-check the URL or re-copy the snippet from the dashboard.</div>' if not form_known else '<p class="ok">Form: <strong>' + form_name + '</strong></p>'}
+
+<h2>Paste into a static HTML page</h2>
+<pre>&lt;form action="{submit_url}" method="POST"&gt;
+  &lt;input name="email" type="email" required /&gt;
+  &lt;input name="message" /&gt;
+  &lt;button type="submit"&gt;Send&lt;/button&gt;
+&lt;/form&gt;</pre>
+
+<h2>Or POST JSON with curl</h2>
+<pre>curl -X POST {submit_url} \\
+  -H 'Content-Type: application/json' \\
+  -d '{{"email":"ada@example.com","message":"hi"}}'</pre>
+</body>
+</html>"""
+    return HTMLResponse(content=body, status_code=status_code)
 
 
 @router.post("/f/{form_id}", response_model=None)

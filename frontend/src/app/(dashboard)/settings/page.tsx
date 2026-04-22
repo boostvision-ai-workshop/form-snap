@@ -41,7 +41,7 @@ export default function SettingsPage() {
     async function fetchUserInfo() {
       try {
         setLoading(true);
-        const response = await api.get('/api/v1/users/me');
+        const response = await api.get('/api/v1/me');
         const data = await response.json();
         setUserInfo(data);
         setError(null);
